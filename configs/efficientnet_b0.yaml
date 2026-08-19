@@ -1,0 +1,23 @@
+# EfficientNetB0 transfer learning - the expected winner and the model the
+# deployed application loads by default (Project Design 4.2: "chosen because of
+# its performance & computation efficiency").
+#
+# At ~5.3M parameters it trains comfortably in 8GB of VRAM and is small enough
+# to run on the CPU-only hardware typical of a Nepali district hospital.
+
+training:
+  architecture: efficientnet_b0
+  pretrained: true
+  batch_size: 32
+  epochs_head: 10
+  epochs_finetune: 30
+  lr_head: 0.001
+  lr_finetune: 0.00002
+  weight_decay: 0.0001
+  optimizer: adamw
+  scheduler: cosine
+  label_smoothing: 0.05
+  dropout: 0.3
+  unfreeze_layers: 40
+  early_stopping_patience: 10
+  mixed_precision: true

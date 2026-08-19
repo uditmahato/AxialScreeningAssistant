@@ -1,0 +1,381 @@
+{
+  "last_reviewed": "2026-08-13",
+  "verification_status": "INDICATIVE - confirm services and contact details directly with the facility",
+  "count": 25,
+  "hospitals": [
+    {
+      "name": "Upendra Devkota Memorial National Institute of Neurological and Allied Sciences (NINAS)",
+      "short": "NINAS",
+      "city": "Kathmandu",
+      "area": "Bansbari",
+      "province": "Bagmati",
+      "type": "Private, specialist",
+      "neuro": [
+        "Neurosurgery",
+        "Neurology",
+        "Neuro-ICU",
+        "MRI",
+        "CT"
+      ],
+      "note": "Nepal's dedicated neurological institute, founded by the late Prof. Upendra Devkota. A principal national referral point for neurosurgery."
+    },
+    {
+      "name": "Tribhuvan University Teaching Hospital (TUTH)",
+      "short": "TUTH",
+      "city": "Kathmandu",
+      "area": "Maharajgunj",
+      "province": "Bagmati",
+      "type": "Government, teaching",
+      "neuro": [
+        "Neurosurgery",
+        "Neurology",
+        "Neuro-ICU",
+        "MRI",
+        "CT",
+        "Neuropathology"
+      ],
+      "note": "Major government teaching hospital. Lower cost than private centres; expect longer waiting times."
+    },
+    {
+      "name": "National Academy of Medical Sciences, Bir Hospital",
+      "short": "Bir Hospital / NAMS",
+      "city": "Kathmandu",
+      "area": "Mahaboudha",
+      "province": "Bagmati",
+      "type": "Government, teaching",
+      "neuro": [
+        "Neurosurgery",
+        "Neurology",
+        "Neuro-ICU",
+        "CT",
+        "MRI"
+      ],
+      "note": "Nepal's oldest hospital. Government rates; a key referral centre for trauma and neurosurgery."
+    },
+    {
+      "name": "Annapurna Neurological Institute and Allied Sciences",
+      "short": "Annapurna Neuro",
+      "city": "Kathmandu",
+      "area": "Maitighar",
+      "province": "Bagmati",
+      "type": "Private, specialist",
+      "neuro": [
+        "Neurosurgery",
+        "Neurology",
+        "Neuro-ICU",
+        "MRI",
+        "CT",
+        "Epilepsy services"
+      ],
+      "note": "Private neurological specialty hospital."
+    },
+    {
+      "name": "Grande International Hospital",
+      "short": "Grande",
+      "city": "Kathmandu",
+      "area": "Dhapasi",
+      "province": "Bagmati",
+      "type": "Private, tertiary",
+      "neuro": [
+        "Neurosurgery",
+        "Neurology",
+        "MRI",
+        "CT",
+        "Neuro-ICU"
+      ],
+      "note": "Clinical data collaboration partner for the Axial Screening Assistant project."
+    },
+    {
+      "name": "Norvic International Hospital",
+      "short": "Norvic",
+      "city": "Kathmandu",
+      "area": "Thapathali",
+      "province": "Bagmati",
+      "type": "Private, tertiary",
+      "neuro": [
+        "Neurology",
+        "Neurosurgery",
+        "MRI",
+        "CT"
+      ],
+      "note": "Private tertiary hospital."
+    },
+    {
+      "name": "Nepal Mediciti Hospital",
+      "short": "Mediciti",
+      "city": "Lalitpur",
+      "area": "Bhaisepati",
+      "province": "Bagmati",
+      "type": "Private, tertiary",
+      "neuro": [
+        "Neurosurgery",
+        "Neurology",
+        "Neuro-ICU",
+        "MRI",
+        "CT"
+      ],
+      "note": "Private tertiary hospital."
+    },
+    {
+      "name": "B&B Hospital",
+      "short": "B&B",
+      "city": "Lalitpur",
+      "area": "Gwarko",
+      "province": "Bagmati",
+      "type": "Private, tertiary",
+      "neuro": [
+        "Neurosurgery",
+        "Neurology",
+        "Spine surgery",
+        "MRI",
+        "CT"
+      ],
+      "note": "Long-established private centre with neurosurgical and spine services."
+    },
+    {
+      "name": "Om Hospital and Research Centre",
+      "short": "Om Hospital",
+      "city": "Kathmandu",
+      "area": "Chabahil",
+      "province": "Bagmati",
+      "type": "Private",
+      "neuro": [
+        "Neurosurgery",
+        "Neurology",
+        "MRI",
+        "CT"
+      ],
+      "note": "Private hospital with neurosciences."
+    },
+    {
+      "name": "B.P. Koirala Institute of Health Sciences (BPKIHS)",
+      "short": "BPKIHS",
+      "city": "Dharan",
+      "area": "Sunsari",
+      "province": "Koshi",
+      "type": "Government, autonomous teaching",
+      "neuro": [
+        "Neurosurgery",
+        "Neurology",
+        "MRI",
+        "CT",
+        "Neuro-ICU"
+      ],
+      "note": "The principal tertiary referral centre for eastern Nepal. Avoids travel to Kathmandu for much of the east."
+    },
+    {
+      "name": "Manipal Teaching Hospital",
+      "short": "Manipal Pokhara",
+      "city": "Pokhara",
+      "area": "Phulbari",
+      "province": "Gandaki",
+      "type": "Private, teaching",
+      "neuro": [
+        "Neurosurgery",
+        "Neurology",
+        "MRI",
+        "CT"
+      ],
+      "note": "Main neurosurgical capability for the western hill region."
+    },
+    {
+      "name": "Pokhara Academy of Health Sciences (Western Regional Hospital)",
+      "short": "Pokhara Academy",
+      "city": "Pokhara",
+      "area": "Ramghat",
+      "province": "Gandaki",
+      "type": "Government, teaching",
+      "neuro": [
+        "Neurosurgery",
+        "Neurology",
+        "CT",
+        "MRI"
+      ],
+      "note": "Government provincial referral hospital for Gandaki Province."
+    },
+    {
+      "name": "Chitwan Medical College Teaching Hospital",
+      "short": "CMC Chitwan",
+      "city": "Bharatpur",
+      "area": "Chitwan",
+      "province": "Bagmati",
+      "type": "Private, teaching",
+      "neuro": [
+        "Neurosurgery",
+        "Neurology",
+        "MRI",
+        "CT"
+      ],
+      "note": "Central Nepal; accessible from much of the Terai without travelling to Kathmandu."
+    },
+    {
+      "name": "College of Medical Sciences Teaching Hospital",
+      "short": "CMS Bharatpur",
+      "city": "Bharatpur",
+      "area": "Chitwan",
+      "province": "Bagmati",
+      "type": "Private, teaching",
+      "neuro": [
+        "Neurosurgery",
+        "Neurology",
+        "CT",
+        "MRI"
+      ],
+      "note": "Teaching hospital with neurosciences."
+    },
+    {
+      "name": "Nobel Medical College Teaching Hospital",
+      "short": "Nobel Biratnagar",
+      "city": "Biratnagar",
+      "area": "Kanchanbari",
+      "province": "Koshi",
+      "type": "Private, teaching",
+      "neuro": [
+        "Neurosurgery",
+        "Neurology",
+        "CT",
+        "MRI"
+      ],
+      "note": "Eastern Terai teaching hospital."
+    },
+    {
+      "name": "Universal College of Medical Sciences",
+      "short": "UCMS Bhairahawa",
+      "city": "Bhairahawa",
+      "area": "Rupandehi",
+      "province": "Lumbini",
+      "type": "Private, teaching",
+      "neuro": [
+        "Neurosurgery",
+        "Neurology",
+        "CT",
+        "MRI"
+      ],
+      "note": "Serves the Lumbini province Terai belt."
+    },
+    {
+      "name": "Nepalgunj Medical College Teaching Hospital",
+      "short": "NGMC",
+      "city": "Nepalgunj",
+      "area": "Banke",
+      "province": "Lumbini",
+      "type": "Private, teaching",
+      "neuro": [
+        "Neurology",
+        "Neurosurgery",
+        "CT",
+        "MRI"
+      ],
+      "note": "Key referral point for mid-western Nepal, including Karnali districts."
+    },
+    {
+      "name": "Bheri Hospital",
+      "short": "Bheri Hospital",
+      "city": "Nepalgunj",
+      "area": "Banke",
+      "province": "Lumbini",
+      "type": "Government, provincial",
+      "neuro": [
+        "Neurology (visiting)",
+        "CT"
+      ],
+      "note": "Government provincial hospital; lower cost. Complex neurosurgery generally referred onward."
+    },
+    {
+      "name": "Seti Provincial Hospital",
+      "short": "Seti Hospital",
+      "city": "Dhangadhi",
+      "area": "Kailali",
+      "province": "Sudurpashchim",
+      "type": "Government, provincial",
+      "neuro": [
+        "Neurology (limited)",
+        "CT"
+      ],
+      "note": "Principal government hospital for far-western Nepal. Neurosurgical cases usually referred to Kathmandu."
+    },
+    {
+      "name": "Karnali Academy of Health Sciences",
+      "short": "KAHS Jumla",
+      "city": "Jumla",
+      "area": "Karnali",
+      "province": "Karnali",
+      "type": "Government, teaching",
+      "neuro": [
+        "General medicine",
+        "Basic imaging"
+      ],
+      "note": "Serves the most remote region of Nepal. No neurosurgery; important as a first point of contact and for onward referral."
+    },
+    {
+      "name": "B.P. Koirala Memorial Cancer Hospital",
+      "short": "BPKMCH",
+      "city": "Bharatpur",
+      "area": "Chitwan",
+      "province": "Bagmati",
+      "type": "Government, specialist cancer",
+      "neuro": [
+        "Neuro-oncology",
+        "Radiotherapy",
+        "Chemotherapy",
+        "CT",
+        "MRI"
+      ],
+      "note": "Nepal's national cancer hospital. Central for radiotherapy and chemotherapy of brain tumours."
+    },
+    {
+      "name": "Bhaktapur Cancer Hospital",
+      "short": "Bhaktapur Cancer",
+      "city": "Bhaktapur",
+      "area": "Bhaktapur",
+      "province": "Bagmati",
+      "type": "Government, specialist cancer",
+      "neuro": [
+        "Neuro-oncology",
+        "Radiotherapy",
+        "Chemotherapy"
+      ],
+      "note": "Government cancer hospital."
+    },
+    {
+      "name": "Nepal Cancer Hospital and Research Centre",
+      "short": "Nepal Cancer Hospital",
+      "city": "Lalitpur",
+      "area": "Harisiddhi",
+      "province": "Bagmati",
+      "type": "Private, specialist cancer",
+      "neuro": [
+        "Neuro-oncology",
+        "Radiotherapy",
+        "Chemotherapy"
+      ],
+      "note": "Private cancer centre."
+    },
+    {
+      "name": "Koshi Hospital",
+      "short": "Koshi Hospital",
+      "city": "Biratnagar",
+      "area": "Morang",
+      "province": "Koshi",
+      "type": "Government, provincial",
+      "neuro": [
+        "Neurology (limited)",
+        "CT"
+      ],
+      "note": "Government provincial hospital, eastern Terai."
+    },
+    {
+      "name": "Lumbini Provincial Hospital",
+      "short": "Lumbini Provincial",
+      "city": "Butwal",
+      "area": "Rupandehi",
+      "province": "Lumbini",
+      "type": "Government, provincial",
+      "neuro": [
+        "Neurology (limited)",
+        "CT"
+      ],
+      "note": "Government provincial hospital."
+    }
+  ]
+}

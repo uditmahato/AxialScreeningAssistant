@@ -1,0 +1,149 @@
+# ---------------------------------------------------------------------------
+# Axial Screening Assistant - base configuration
+#
+# This file holds the settings shared by every experiment. Architecture-specific
+# runs override only what they need:
+#
+#   python scripts/train.py --config baseline_cnn
+#   python scripts/train.py --config vgg16
+#   python scripts/train.py --config efficientnet_b0
+#
+# To train on the clinical Grande International Hospital dataset instead of the
+# public contingency data, use --config grande_clinical.
+# ---------------------------------------------------------------------------
+
+project_name: Axial Screening Assistant
+
+paths:
+  data_root: data
+  raw_dir: data/raw
+  interim_dir: data/interim
+  processed_dir: data/processed
+  artifacts_dir: artifacts
+  runs_dir: artifacts/runs
+  models_dir: artifacts/models
+  index_dir: artifacts/faiss_index
+  knowledge_base_dir: knowledge_base
+  uploads_dir: instance/uploads
+  reports_dir: instance/reports
+
+dataset:
+  name: br35h
+  adapter: imagefolder
+  source_dir: null            # null => paths.raw_dir / dataset.name
+  task: binary
+  class_names: [normal, abnormal]
+  patient_id_pattern: null    # set for clinical data, e.g. '^(P\d{4})_'
+  supplementary: []
+
+preprocessing:
+  image_size: 224             # Project Design 4.1
+  clahe_enabled: true
+  clahe_clip_limit: 2.0
+  clahe_tile_grid: 8
+  skull_strip: false
+  normalize_mean: [0.485, 0.456, 0.406]
+  normalize_std: [0.229, 0.224, 0.225]
+
+augmentation:
+  enabled: true
+  rotation_degrees: 15.0
+  zoom_range: 0.10
+  horizontal_flip: true
+  brightness: 0.20
+  contrast: 0.20
+  random_erasing_p: 0.0
+
+split:
+  train_ratio: 0.70
+  val_ratio: 0.15
+  test_ratio: 0.15
+  seed: 42
+  stratify: true
+  group_by_patient: true
+
+training:
+  architecture: efficientnet_b0
+  pretrained: true
+  batch_size: 32
+  epochs_head: 10
+  epochs_finetune: 25
+  lr_head: 0.001
+  lr_finetune: 0.00001
+  weight_decay: 0.0001
+  optimizer: adamw
+  scheduler: cosine
+  label_smoothing: 0.05
+  dropout: 0.3
+  unfreeze_layers: 30
+  class_weighting: true
+  early_stopping_patience: 8
+  early_stopping_metric: val_auc
+  grad_clip_norm: 1.0
+  mixed_precision: true
+  num_workers: 4
+  seed: 42
+  device: auto
+
+evaluation:
+  cv_folds: 5
+  run_cross_validation: false
+  decision_threshold: 0.40
+  tune_threshold_on_val: true
+  # Sensitivity floor for threshold selection. High on purpose: a missed
+  # abnormality is far costlier than a false alarm in triage.
+  min_recall: 0.95
+  # F2 weights recall twice as heavily as precision. F1 would assert that a
+  # missed tumour and a false alarm cost the same.
+  threshold_metric: f2
+  bootstrap_ci_samples: 1000
+  target_accuracy: 0.90
+
+rag:
+  # E5 is trained for ASYMMETRIC retrieval (short query -> long passage), which
+  # is what this system actually does. A symmetric paraphrase model was tried
+  # first and failed the safety-critical cases: a question about infection
+  # versus cancer returned only tumour documents. Supports 100 languages, so
+  # Nepali queries retrieve from the English corpus.
+  # For a CPU-only deployment, intfloat/multilingual-e5-small is ~3x faster at
+  # some cost in quality; rebuild the index after changing this.
+  embedding_model: intfloat/multilingual-e5-base
+  embedding_device: auto
+  chunk_size: 900
+  chunk_overlap: 150
+  top_k: 5
+  fetch_k: 20
+  search_type: mmr
+  mmr_lambda: 0.5
+  # Absolute floor only - deliberately low. Cosine scores against long document
+  # chunks are systematically smaller for short questions, so a high absolute
+  # cut-off silently discards every brief query ("Where do I go?"). The real
+  # filtering is done by the per-query relative floor in VectorStore.search.
+  score_threshold: 0.10
+  min_corpus_documents: 50
+
+llm:
+  provider: ollama
+  model: llama3.1:8b
+  base_url: http://localhost:11434
+  temperature: 0.15
+  max_tokens: 900
+  timeout_seconds: 120
+  num_ctx: 8192
+  api_key_env_var: NEUROSCAN_LLM_API_KEY
+
+chatbot:
+  default_language: en
+  supported_languages: [en, ne]
+  max_history_turns: 8
+  max_question_chars: 1000
+
+web:
+  host: 127.0.0.1
+  port: 5000
+  debug: false
+  max_upload_mb: 16
+  allowed_extensions: [jpg, jpeg, png]
+  secret_key_env_var: NEUROSCAN_SECRET_KEY
+  session_lifetime_minutes: 60
+  retain_uploads_hours: 24

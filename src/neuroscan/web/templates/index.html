@@ -1,0 +1,135 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+{% if error %}
+<div class="alert alert-error" role="alert">
+  <strong>{{ error }}</strong>
+  {% if error_detail %}<span class="detail">{{ error_detail }}</span>{% endif %}
+</div>
+{% endif %}
+
+<section class="hero">
+  <h1>{% if language == 'ne' %}मस्तिष्क स्क्यान स्क्रिनिङ सहयोग{% else %}Brain scan screening support{% endif %}</h1>
+  <p class="lede">{{ t.hero_lede }}</p>
+  <p class="hero-tag">{{ t.hero_tag }}</p>
+</section>
+
+<div class="landing-grid">
+
+  <form class="panel panel-elevated upload-card" method="post" action="{{ url_for('analyse') }}"
+        enctype="multipart/form-data" id="upload-form"
+        data-str-bad-type="{{ t.error_bad_type }}">
+
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+
+    <div class="dropzone" id="dropzone">
+      {# The title replaces the browser's default "No file chosen" hover
+         tooltip on the invisible input that covers the dropzone. #}
+      <input type="file" name="scan" id="scan-input" accept=".jpg,.jpeg,.png,image/jpeg,image/png"
+             title="{{ t.drop_or_choose }}" required
+             aria-label="{{ t.upload_title }}"
+             aria-describedby="dropzone-formats upload-error"
+             data-max-bytes="{{ max_upload_bytes }}"
+             data-str-too-large="{{ t.file_too_large }} ({{ max_upload_mb }} MB)">
+
+      <div class="dropzone-inner" id="dropzone-prompt">
+        <svg class="dropzone-icon" viewBox="0 0 40 40" width="38" height="38" aria-hidden="true">
+          <rect x="4" y="8" width="32" height="26" rx="4" fill="none" stroke="currentColor" stroke-width="2.2"/>
+          <path d="M20 27V14M14.5 19.5 20 14l5.5 5.5" fill="none" stroke="currentColor"
+                stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <p class="dropzone-title">{{ t.upload_title }}</p>
+        <p class="dropzone-hint">{{ t.drop_or_choose }}</p>
+        <span class="faux-btn" aria-hidden="true">{{ t.choose_image }}</span>
+        <p class="dropzone-formats" id="dropzone-formats">JPG &middot; JPEG &middot; PNG &middot; max {{ max_upload_mb }} MB</p>
+      </div>
+
+      <div class="dropzone-preview" id="dropzone-preview" hidden>
+        <img id="preview-image" alt="Selected scan preview">
+        <div class="preview-meta">
+          <p class="preview-name" id="preview-name"></p>
+          <p class="preview-size" id="preview-size"></p>
+          <p class="preview-ready">{{ t.ready_to_analyse }}</p>
+        </div>
+      </div>
+    </div>
+
+    <p class="upload-error" id="upload-error" role="alert" hidden></p>
+    <p class="hint hint-spaced">{{ t.upload_hint }}</p>
+
+    <div class="upload-actions">
+      <button type="button" class="btn btn-secondary" id="change-image" hidden>{{ t.change_image }}</button>
+      <button type="submit" class="btn btn-primary" id="submit-btn"
+              {% if not status.model %}disabled data-server-disabled{% endif %}>
+        {{ t.analyse }}
+      </button>
+    </div>
+    <p class="submit-note" id="submit-note" role="status" aria-live="polite" hidden
+       data-stages="{{ t.stage_checking }}|{{ t.stage_classifier }}|{{ t.stage_preparing }}">
+      {{ t.analysing }}. {{ t.analysing_hint }}
+    </p>
+  </form>
+
+  <aside class="panel model-summary">
+    <span class="eyebrow">{{ t.what_model_checks }}</span>
+    <h2 class="h2-compact">{{ t.two_classes }}</h2>
+
+    <div class="class-row">
+      <span class="class-name">{{ t.normal }}</span>
+      <span class="class-note">{{ t.normal_class_note }}</span>
+    </div>
+    <div class="class-row">
+      <span class="class-name">{{ t.abnormal }}</span>
+      <span class="class-note">{{ t.abnormal_class_note }}</span>
+    </div>
+
+    <p class="hint"><strong>{{ t.single_image }}.</strong> {{ t.no_specific_disease }}</p>
+    <p class="hint">
+      {% if language == 'ne' %}
+        ट्युमर वा संक्रमण जस्ता सम्भावनाहरू चिकित्सकीय सन्दर्भ खण्डमा, सन्दर्भ
+        चिकित्सा स्रोतका आधारमा देखिन्छन्।
+      {% else %}
+        Possibilities such as tumour or infection appear in the clinical
+        advisory, drawn from referenced medical sources.
+      {% endif %}
+    </p>
+    <a class="model-summary-link" href="{{ url_for('about') }}">{{ t.learn_model }} &rarr;</a>
+  </aside>
+
+</div>
+
+<div class="landing-secondary">
+
+  <section>
+    <h2 class="h2-compact">{{ t.before_uploading }}</h2>
+    <ul class="checklist">
+      {% if language == 'ne' %}
+        <li>मस्तिष्कको MRI हो, CT वा एक्स-रे होइन</li>
+        <li>अक्षीय (माथिबाट काटिएको) दृश्य हो</li>
+        <li>पूरा टाउको तस्बिरभित्र छ</li>
+        <li><strong>बिरामीको नाम र नम्बर हटाइएको छ</strong></li>
+      {% else %}
+        <li>Brain MRI, not a CT or X-ray</li>
+        <li>Axial view</li>
+        <li>Whole head visible</li>
+        <li><strong>Patient identifiers removed</strong></li>
+      {% endif %}
+    </ul>
+  </section>
+
+  <section class="urgent-summary">
+    <h2>{{ t.urgent_help_title }}</h2>
+    <p>{{ t.urgent_help_body }}</p>
+    <details>
+      <summary>{{ t.view_warning_signs }}</summary>
+      <p class="mt-2">{{ emergency_instruction }}</p>
+      <ul>
+        {% for flag in red_flags %}<li>{{ flag }}</li>{% endfor %}
+      </ul>
+    </details>
+  </section>
+
+</div>
+
+{% endblock %}

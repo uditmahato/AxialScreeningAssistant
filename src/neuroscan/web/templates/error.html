@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+{% block title %}{{ code }} · {{ t.app_title }}{% endblock %}
+
+{% block content %}
+<section class="error-page">
+  <p class="error-code">{{ code }}</p>
+  <h1>{{ message }}</h1>
+  <p><a class="btn btn-primary" href="{{ url_for('index') }}">
+    {% if language == 'ne' %}सुरुमा फर्कनुहोस्{% else %}Back to start{% endif %}
+  </a></p>
+</section>
+{% endblock %}

@@ -1,0 +1,805 @@
+/* Axial Screening Assistant, clinical portal design system
+ *
+ * Constraints that shape everything here: this runs on cheap Android phones
+ * over unreliable connections in district health posts, and on wide clinic
+ * desktops. So: system fonts only (they render Devanagari correctly on both
+ * Windows and Android), no framework, no webfonts, no image assets beyond the
+ * scans themselves, one stylesheet.
+ *
+ * Colour discipline: teal is structure and primary action. Orange is reserved
+ * for the abnormal classification and Grad-CAM. Red is emergency content
+ * only. Green is operational success only, never "the patient is fine".
+ */
+
+/* ------------------------------------------------------------------ tokens */
+
+:root {
+  --bg-page:      #F7F6F2;
+  --bg-surface:   #FFFFFF;
+  --bg-soft:      #F1F3F0;
+
+  --text-primary:   #17211F;
+  --text-secondary: #58635F;
+  /* Darkened from #7A8580, which was 3.82:1 on white and 3.53:1 on the page
+   * background - under AA for the body sizes it is used at. This carries the
+   * upload instructions, the Grad-CAM caveat caption and the emergency
+   * numbers in the footer, all read on cheap panels in daylight. */
+  --text-muted:     #616B67;
+
+  --border:        #DDE2DE;
+  --border-strong: #C8D0CB;
+  /* Separated from --border-strong because WCAG 1.4.11 wants 3:1 for a
+   * boundary that is the only thing identifying a control. --border-strong
+   * is 1.57:1 on white, which is fine for a decorative panel edge and not
+   * fine for the edge of a text input. Form controls use this instead. */
+  --border-control: #86918B;
+
+  --teal-900: #073F3B;
+  --teal-800: #09534D;
+  --teal-700: #0B625A;
+  --teal-100: #E6F0EE;
+
+  --orange-700: #C9571B;
+  --orange-100: #FFF0E5;
+
+  --red-700: #B42318;
+  --red-100: #FDECEA;
+
+  --green-700: #277A55;
+  --green-100: #E9F5EE;
+
+  --focus: #176F66;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+
+  --radius-btn: 8px;
+  --radius-card: 10px;
+
+  --shadow-card: 0 4px 16px rgba(20, 35, 31, 0.05);
+}
+
+/* -------------------------------------------------------------- reset/base */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+/* The hidden attribute must always win. Without this, any component that
+ * sets its own display (flex buttons, the upload preview) renders even
+ * while hidden - the selected-file state was visible before any file was
+ * chosen because of exactly that. */
+[hidden] { display: none !important; }
+
+body {
+  margin: 0;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
+    "Segoe UI", "Noto Sans", "Noto Sans Devanagari", sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+  color: var(--text-primary);
+  background: var(--bg-page);
+}
+
+img { max-width: 100%; }
+
+/* -------------------------------------------------------------- typography */
+
+h1, h2, h3, h4 { color: var(--text-primary); margin: 0 0 .5em; }
+
+h1 {
+  font-size: clamp(2rem, 3vw, 2.875rem);
+  line-height: 1.08;
+  letter-spacing: -0.025em;
+  font-weight: 650;
+}
+h2 { font-size: clamp(1.25rem, 1.8vw, 1.5rem); line-height: 1.2; letter-spacing: -0.015em; font-weight: 640; }
+h3 { font-size: 1.1rem; line-height: 1.25; font-weight: 630; }
+
+a { color: var(--teal-700); text-underline-offset: 2px; }
+code {
+  font-family: ui-monospace, "Cascadia Code", Consolas, monospace;
+  font-size: .875em;
+  background: var(--bg-soft);
+  padding: .12em .38em;
+  border-radius: 4px;
+}
+
+.lede { color: var(--text-secondary); font-size: 1.06rem; margin: 0; max-width: 62ch; }
+.hint { font-size: .84rem; color: var(--text-muted); }
+
+/* Small uppercase labels: the quiet voice used for section metadata. */
+.eyebrow {
+  font-size: .7rem;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+/* Positive tracking breaks Devanagari conjunct ligatures, and this label
+ * sits directly above the verdict. Uppercase is a no-op for the script. */
+html[lang="ne"] .eyebrow { letter-spacing: normal; }
+
+.visually-hidden, .skip-link:not(:focus) {
+  position: absolute; width: 1px; height: 1px;
+  overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap;
+}
+.skip-link:focus {
+  position: absolute; left: 8px; top: 8px; z-index: 100;
+  background: var(--bg-surface); padding: 8px 14px; border-radius: 6px;
+}
+
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; }
+
+::selection { background: var(--teal-100); color: var(--teal-900); }
+input, textarea { caret-color: var(--focus); }
+
+/* The two custom scroll regions (.chat-log, .table-panel) rendered raw OS
+ * scrollbars; the horizontal one on the history table is the only way to
+ * reach the confidence column on a phone. */
+.chat-log, .table-panel { scrollbar-width: thin; scrollbar-color: var(--border-control) transparent; }
+
+/* ------------------------------------------------------------------ layout */
+
+.wrap {
+  width: min(1280px, calc(100% - 64px));
+  margin-inline: auto;
+}
+.wrap-wide { width: min(1360px, calc(100% - 64px)); }
+
+main { padding-top: var(--space-6); padding-bottom: var(--space-8); }
+
+/* ------------------------------------------------------------------ navbar */
+
+.site-header {
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border);
+}
+.header-inner {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: var(--space-4);
+  min-height: 68px;
+  padding-top: var(--space-2); padding-bottom: var(--space-2);
+}
+.brand { display: flex; align-items: center; gap: 12px; text-decoration: none; color: inherit; }
+.brand-mark { color: var(--teal-800); display: block; width: 34px; height: 34px; }
+.brand-mark .focus-dot { fill: var(--orange-700); }
+.brand strong {
+  display: block; color: var(--text-primary); font-size: 1.14rem;
+  letter-spacing: -0.012em; line-height: 1.2;
+}
+.brand strong span { color: var(--teal-800); font-weight: 640; }
+.brand small { display: block; color: var(--text-muted); font-size: .76rem; line-height: 1.3; }
+
+.site-nav { display: flex; align-items: center; gap: var(--space-1); flex-wrap: wrap; }
+.site-nav a {
+  text-decoration: none; font-size: .9rem; color: var(--text-secondary);
+  padding: 11px 13px; border-radius: 7px;
+  border-bottom: 2px solid transparent;
+}
+.site-nav a:hover { background: var(--teal-100); color: var(--teal-800); }
+.site-nav a.is-active {
+  color: var(--teal-800); font-weight: 620;
+  border-bottom-color: var(--teal-700);
+  border-radius: 7px 7px 0 0;
+}
+/* The language switch is a control, not a nav link. It drops the nav's
+ * transparent underline (which stacked on the box border and made the
+ * bottom edge 3px thick), takes a compact button padding, and stays at
+ * the 44px touch target through min-height. */
+.site-nav a.lang-toggle {
+  border: 1px solid var(--border-strong); border-radius: 7px;
+  padding: 0 14px; min-height: 44px; display: inline-flex; align-items: center;
+  margin-left: var(--space-2);
+  font-weight: 620; color: var(--teal-800);
+  background: var(--bg-surface);
+}
+.site-nav a.lang-toggle:hover { background: var(--teal-100); border-color: var(--teal-700); }
+
+.nav-toggle {
+  display: none;
+  background: none; border: 1px solid var(--border-strong); border-radius: 7px;
+  padding: 8px 10px; cursor: pointer; color: var(--text-primary);
+  font-family: inherit; font-size: .9rem;
+}
+
+/* Collapsed mobile navigation is a JS enhancement: without scripting the
+ * links simply wrap, which is uglier but never broken. */
+@media (max-width: 768px) {
+  html.js .site-nav { display: none; }
+  html.js .nav-toggle { display: inline-flex; align-items: center; gap: 6px; }
+  html.js .site-header.nav-open .site-nav {
+    display: flex; flex-direction: column; align-items: stretch;
+    width: 100%; padding: var(--space-2) 0 var(--space-3);
+  }
+  html.js .site-header.nav-open .header-inner { flex-wrap: wrap; }
+  html.js .site-header.nav-open .site-nav a { border-bottom: 0; }
+  html.js .site-header.nav-open .site-nav a.is-active { background: var(--teal-100); }
+}
+
+/* ------------------------------------------------------------------ alerts */
+
+.alert {
+  border-radius: var(--radius-card); padding: 12px 16px; margin: 0 0 var(--space-4);
+  font-size: .9rem; border: 1px solid var(--border);
+  background: var(--bg-surface);
+}
+.alert strong { display: block; }
+.alert .detail { display: block; margin-top: 4px; font-size: .84rem; color: var(--text-muted); }
+.alert-error { background: var(--red-100); border-color: #EFCEC9; color: #7A1B12; }
+.alert-warn { background: var(--orange-100); border-color: #F0D6C0; color: #7A3D10; }
+
+/* ----------------------------------------------------------------- buttons */
+
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  min-height: 44px;
+  border: 1px solid transparent; border-radius: var(--radius-btn);
+  padding: 10px 20px; font-size: .95rem; font-weight: 620;
+  text-decoration: none; text-align: center; cursor: pointer;
+  font-family: inherit; transition: background .15s, border-color .15s;
+}
+.btn-primary { background: var(--teal-800); color: #fff; }
+.btn-primary:hover:not(:disabled) { background: var(--teal-900); }
+.btn-primary:active:not(:disabled) { background: var(--teal-900); transform: scale(.985); }
+.btn-secondary {
+  background: var(--bg-surface); border-color: var(--border-strong);
+  color: var(--teal-800);
+}
+.btn-secondary:hover:not(:disabled) { background: var(--teal-100); border-color: var(--teal-700); }
+.btn-secondary:active:not(:disabled) { background: var(--teal-100); transform: scale(.985); }
+.btn-ghost { background: transparent; color: var(--teal-800); }
+.btn-ghost:hover:not(:disabled) { background: var(--teal-100); }
+.btn-ghost:active:not(:disabled) { background: var(--teal-100); transform: scale(.985); }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+
+/* ------------------------------------------------------------------ panels */
+
+.panel {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  padding: var(--space-5);
+}
+.panel-elevated { box-shadow: var(--shadow-card); }
+
+/* ------------------------------------------------------------------- hero */
+
+.hero { padding: var(--space-6) 0 var(--space-5); }
+.hero h1 { margin-bottom: var(--space-3); }
+.hero-tag { color: var(--text-muted); font-size: .9rem; margin: var(--space-2) 0 0; }
+
+/* --------------------------------------------------------- landing layout */
+
+.landing-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.7fr) minmax(300px, 0.8fr);
+  gap: var(--space-5);
+  align-items: start;
+  margin-bottom: var(--space-6);
+}
+
+.landing-secondary {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--space-6);
+  padding-top: var(--space-5);
+  border-top: 1px solid var(--border);
+}
+
+/* ------------------------------------------------------------------ upload */
+
+.upload-card { padding: var(--space-5); }
+
+.dropzone {
+  position: relative;
+  border: 1.5px dashed var(--border-control);
+  border-radius: var(--radius-card);
+  background: var(--bg-page);
+  padding: var(--space-7) var(--space-5);
+  text-align: center;
+  cursor: pointer;
+  transition: border-color .15s, background .15s;
+}
+.dropzone:hover, .dropzone:focus-within, .dropzone.is-dragging {
+  border-color: var(--teal-700); background: var(--teal-100);
+}
+.dropzone input[type="file"] {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  opacity: 0; cursor: pointer;
+}
+.dropzone-icon { color: var(--teal-800); display: inline-block; margin-bottom: var(--space-3); }
+.dropzone-title { margin: 0 0 var(--space-2); font-weight: 630; font-size: 1.12rem; }
+.dropzone-hint { margin: 0 0 var(--space-4); font-size: .87rem; color: var(--text-muted); }
+.dropzone-formats {
+  margin: var(--space-4) 0 0; font-size: .78rem; color: var(--text-muted);
+  letter-spacing: .06em;
+}
+/* Sits under the transparent file input, so a click lands on the input. */
+.faux-btn {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-height: 42px; padding: 8px 18px;
+  background: var(--bg-surface); border: 1px solid var(--border-strong);
+  border-radius: var(--radius-btn); color: var(--teal-800);
+  font-weight: 620; font-size: .92rem;
+}
+
+/* Selected-file state */
+.dropzone-preview { display: flex; align-items: center; gap: var(--space-4); text-align: left; }
+.dropzone-preview img {
+  width: 96px; height: 96px; object-fit: cover;
+  border-radius: 8px; border: 1px solid var(--border);
+  background: #0B0B0B; flex: none;
+}
+.preview-meta p { margin: 0; }
+.preview-name { font-weight: 620; word-break: break-all; }
+.preview-size { font-size: .84rem; color: var(--text-muted); }
+.preview-ready { font-size: .84rem; color: var(--green-700); font-weight: 620; margin-top: var(--space-1); }
+
+.dropzone.is-invalid { border-color: var(--red-700); background: var(--red-100); }
+.upload-error { color: var(--red-700); font-size: .87rem; margin: var(--space-3) 0 0; }
+
+.upload-actions {
+  display: flex; gap: var(--space-3); justify-content: flex-end;
+  margin-top: var(--space-4);
+}
+.submit-note { color: var(--text-muted); font-size: .88rem; margin: var(--space-3) 0 0; text-align: right; }
+
+/* ---------------------------------------------------------- model summary */
+
+.model-summary .eyebrow { display: block; margin-bottom: var(--space-3); }
+.class-row { padding: var(--space-3) 0; border-top: 1px solid var(--border); }
+.class-row:last-of-type { border-bottom: 1px solid var(--border); margin-bottom: var(--space-3); }
+.class-name { display: block; font-weight: 640; font-size: 1rem; }
+.class-note { display: block; font-size: .85rem; color: var(--text-secondary); }
+.model-summary .hint { margin: var(--space-2) 0 0; }
+.model-summary-link { display: inline-block; margin-top: var(--space-3); font-size: .88rem; }
+
+/* ------------------------------------------------ before / urgent (light) */
+
+.checklist { margin: 0; padding: 0; list-style: none; font-size: .93rem; }
+.checklist li { padding: 5px 0 5px 26px; position: relative; }
+.checklist li::before {
+  content: ""; position: absolute; left: 2px; top: 11px;
+  width: 12px; height: 7px;
+  border-left: 2px solid var(--green-700); border-bottom: 2px solid var(--green-700);
+  transform: rotate(-45deg);
+}
+
+.urgent-summary { border-left: 3px solid var(--red-700); padding-left: var(--space-4); }
+.urgent-summary h2 { font-size: 1.1rem; }
+.urgent-summary p { margin: 0 0 var(--space-2); font-size: .93rem; color: var(--text-secondary); }
+.urgent-summary summary {
+  display: inline-flex; align-items: center; min-height: 44px;
+  cursor: pointer; color: var(--red-700); font-weight: 620; font-size: .9rem;
+  list-style: none;
+}
+.urgent-summary summary::after { content: " →"; }
+.urgent-summary ul { margin: var(--space-2) 0 0; padding-left: 20px; font-size: .9rem; }
+.urgent-summary li { margin-bottom: 4px; }
+
+/* ------------------------------------------------------------- result page */
+
+.result-head {
+  display: flex; flex-wrap: wrap; gap: var(--space-3);
+  align-items: center; justify-content: space-between;
+  margin-bottom: var(--space-5);
+}
+.result-head-actions { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.scan-ref code { font-size: .84rem; color: var(--text-secondary); }
+
+/* Full-width verdict summary. The verdict is a sentence, not a stamp:
+ * "Abnormal pattern detected" reads as a finding to review, a giant coloured
+ * ABNORMAL reads as a diagnosis. Normal gets neutral styling, never
+ * celebratory green. */
+.result-summary {
+  background: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-left: 5px solid var(--teal-700);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  padding: var(--space-5) var(--space-6);
+  margin-bottom: var(--space-5);
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(260px, 0.6fr);
+  gap: var(--space-5);
+  align-items: start;
+}
+.result-summary.is-abnormal { border-left-color: var(--orange-700); }
+
+.verdict-title {
+  margin: 0 0 var(--space-2);
+  font-size: clamp(1.7rem, 2.6vw, 2.25rem);
+  line-height: 1.1; letter-spacing: -0.02em; font-weight: 680;
+}
+.is-abnormal .verdict-title { color: var(--orange-700); }
+.verdict-note { margin: 0; color: var(--text-secondary); font-size: .96rem; max-width: 52ch; }
+
+.confidence-block .eyebrow { display: block; margin-bottom: var(--space-1); }
+.confidence-value {
+  display: block; font-size: 1.9rem; font-weight: 680;
+  font-variant-numeric: tabular-nums; line-height: 1.1;
+}
+.confidence-bar {
+  display: block; height: 8px; background: var(--bg-soft);
+  border-radius: 4px; overflow: hidden; margin: var(--space-2) 0;
+}
+.confidence-bar span { display: block; height: 100%; background: var(--teal-700); }
+.is-abnormal .confidence-bar span { background: var(--orange-700); }
+.confidence-note { margin: 0; font-size: .8rem; color: var(--text-muted); }
+
+/* The one disclaimer component on the result page. */
+.info-note {
+  display: flex; gap: 10px; align-items: flex-start;
+  background: var(--bg-soft); border: 1px solid var(--border);
+  border-radius: var(--radius-btn); padding: 12px 16px;
+  margin: var(--space-5) 0 0;
+  color: var(--text-secondary); font-size: .87rem;
+}
+.info-note svg { flex: none; color: var(--teal-800); margin-top: 3px; }
+.info-note p { margin: 0; }
+.info-note strong { color: var(--text-primary); }
+
+/* Result working area: viewer and details left, clinical context right.
+ * Grid areas so the mobile order (image, advisory, details) needs no
+ * duplicate markup. */
+.result-grid {
+  display: grid;
+  grid-template-columns: minmax(340px, 0.8fr) minmax(0, 1.2fr);
+  grid-template-areas:
+    "viewer advisory"
+    "details advisory"
+    ". advisory";
+  gap: var(--space-6);
+  align-items: start;
+}
+.rg-viewer { grid-area: viewer; }
+.rg-advisory { grid-area: advisory; min-width: 0; }
+.rg-details { grid-area: details; }
+
+@media (min-width: 1101px) {
+  .rg-viewer { position: sticky; top: 96px; }
+}
+
+/* ------------------------------------------------------------- scan viewer */
+
+.tab-radio { position: absolute; opacity: 0; pointer-events: none; }
+.tab-labels {
+  display: flex; gap: var(--space-1);
+  border-bottom: 1px solid var(--border);
+  margin-bottom: var(--space-4);
+}
+.tab-labels label {
+  display: inline-flex; align-items: center; min-height: 44px;
+  padding: 8px 16px; font-size: .89rem; font-weight: 620; color: var(--text-secondary);
+  cursor: pointer; border-radius: 8px 8px 0 0;
+  border-bottom: 2px solid transparent; margin-bottom: -1px;
+}
+.tab-labels label:hover { color: var(--teal-800); background: var(--teal-100); }
+.scan-tabs .tab-panel { display: none; margin: 0; }
+#tab-original:checked ~ .tab-panel-original { display: block; }
+#tab-heatmap:checked ~ .tab-panel-heatmap { display: block; }
+#tab-original:checked ~ .tab-labels label[for="tab-original"],
+#tab-heatmap:checked ~ .tab-labels label[for="tab-heatmap"] {
+  color: var(--text-primary); border-bottom-color: var(--orange-700);
+}
+/* Pair each radio to its own label. The previous selector was
+ * `.tab-radio:focus-visible ~ .tab-labels label`, whose descendant combinator
+ * matched every label in the strip, so arrowing between tabs outlined both
+ * and showed no focus movement at all. */
+#tab-original:focus-visible ~ .tab-labels label[for="tab-original"],
+#tab-heatmap:focus-visible ~ .tab-labels label[for="tab-heatmap"] {
+  outline: 2px solid var(--focus); outline-offset: 2px;
+}
+
+.tab-panel img {
+  width: 100%; height: auto; border-radius: 8px;
+  border: 1px solid var(--border); background: #0B0B0B;
+  aspect-ratio: 1 / 1; object-fit: contain;
+}
+/* Stands in for the Grad-CAM image when no map could be generated: same
+ * frame as the scan, a statement instead of an uninterpretable black square. */
+.heatmap-missing {
+  aspect-ratio: 1 / 1;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: var(--space-2); padding: var(--space-5); text-align: center;
+  background: #0B0B0B; border: 1px solid var(--border); border-radius: 8px;
+}
+.heatmap-missing p { margin: 0; color: #C9D1CD; font-size: .9rem; max-width: 34ch; }
+.heatmap-missing strong { color: #E8ECEA; }
+
+.tab-panel figcaption {
+  font-size: .8rem; color: var(--text-muted); margin-top: var(--space-2);
+  line-height: 1.5;
+}
+
+/* --------------------------------------------------------- analysis details */
+
+.analysis-details { font-size: .88rem; }
+.analysis-details summary {
+  cursor: pointer; color: var(--teal-800); font-weight: 620; font-size: .88rem;
+  padding: 6px 0;
+}
+.analysis-details[open] summary { margin-bottom: var(--space-2); }
+.spec-table { width: 100%; border-collapse: collapse; font-size: .88rem; }
+.spec-table th, .spec-table td {
+  text-align: left; padding: 8px 12px; border-bottom: 1px solid var(--border);
+}
+.spec-table th { color: var(--text-muted); font-weight: 600; width: 42%; }
+.spec-table td { font-variant-numeric: tabular-nums; }
+.spec-table thead th { color: var(--text-secondary); font-size: .78rem; text-transform: uppercase; letter-spacing: .07em; }
+.analysis-details .spec-table {
+  background: var(--bg-surface); border: 1px solid var(--border); border-radius: 8px;
+}
+.analysis-details tr:last-child th, .analysis-details tr:last-child td { border-bottom: 0; }
+
+/* ---------------------------------------------------------------- advisory */
+
+.clinical-context > .eyebrow { display: block; margin-bottom: 2px; }
+.clinical-context h2 { margin-bottom: var(--space-1); }
+.context-note { margin: 0 0 var(--space-4); }
+
+.advisory-summary { font-size: .98rem; margin: 0 0 var(--space-4); max-width: 68ch; }
+
+.advisory h3 { margin: var(--space-5) 0 var(--space-2); font-size: 1.02rem; color: var(--teal-900); }
+.advisory h3:first-child { margin-top: 0; }
+.advisory h4 { font-size: .92rem; margin: .9em 0 .3em; }
+.advisory p { margin: 0 0 .7em; }
+.advisory ul, .advisory ol { margin: 0 0 .8em; padding-left: 1.35em; }
+.advisory li { margin-bottom: .35em; }
+.advisory hr { border: 0; height: 1px; background: var(--border); margin: 1em 0; }
+.advisory strong { font-weight: 650; }
+
+.causes { margin: 0; padding-left: 1.45em; }
+.causes li { margin-bottom: var(--space-3); }
+.causes strong { font-weight: 650; }
+.cause-note { display: block; color: var(--text-secondary); font-size: .9rem; }
+
+.steps { margin: 0; padding-left: 1.3em; }
+.steps li { margin-bottom: var(--space-2); }
+
+/* --------------------------------------------------------------- emergency */
+
+.emergency-panel {
+  background: var(--red-100);
+  border: 1px solid #EFCEC9;
+  border-left: 4px solid var(--red-700);
+  border-radius: var(--radius-card);
+  padding: var(--space-5);
+  margin-top: var(--space-5);
+}
+.emergency-panel h2 { color: var(--red-700); font-size: 1.12rem; }
+.emergency-panel p { margin: 0 0 var(--space-2); font-size: .93rem; }
+.emergency-panel ul { margin: var(--space-2) 0 0; padding-left: 20px; font-size: .92rem; }
+.emergency-panel li { margin-bottom: 4px; }
+.emergency-contact { margin: var(--space-3) 0 0; font-size: 1rem; }
+
+/* --------------------------------------------------------------- questions */
+
+.chat-panel { margin-top: var(--space-6); }
+.chat-log { max-height: 560px; overflow-y: auto; margin-bottom: var(--space-3); }
+.qa {
+  border: 1px solid var(--border); border-radius: var(--radius-btn);
+  margin-bottom: var(--space-3); overflow: hidden; font-size: .92rem;
+  background: var(--bg-surface);
+}
+.qa-q { background: var(--bg-soft); padding: 10px 16px; border-bottom: 1px solid var(--border); }
+.qa-a { padding: 12px 16px; }
+.qa .eyebrow { display: block; margin-bottom: 2px; }
+.qa p { margin: 0; white-space: pre-wrap; }
+.qa-a.is-pending p { color: var(--text-muted); }
+.qa-error .qa-a { background: var(--red-100); }
+.qa-refused .qa-a { background: var(--orange-100); }
+.chat-citations { margin-top: var(--space-2); font-size: .8rem; }
+.chat-citations summary {
+  display: inline-flex; align-items: center; min-height: 44px;
+  cursor: pointer; color: var(--teal-700);
+}
+.chat-citations ul { margin: 5px 0 0; padding-left: 18px; color: var(--text-muted); }
+
+.chat-suggestions { display: flex; flex-wrap: wrap; gap: var(--space-2); margin-bottom: var(--space-3); }
+.chip {
+  background: var(--bg-surface); border: 1px solid var(--border-strong); color: var(--teal-800);
+  border-radius: 999px; padding: 8px 15px; font-size: .84rem; cursor: pointer;
+  font-family: inherit; transition: background .15s; min-height: 44px;
+}
+.chip:hover:not(:disabled) { background: var(--teal-100); }
+.chip:disabled { opacity: .45; cursor: not-allowed; }
+
+.chat-form { display: flex; gap: var(--space-2); }
+.chat-form input {
+  flex: 1; min-width: 0; min-height: 46px; padding: 10px 16px; font-size: .95rem;
+  font-family: inherit; border: 1px solid var(--border-control); border-radius: var(--radius-btn);
+  background: var(--bg-surface); color: var(--text-primary);
+}
+.chat-form input:focus { outline: 2px solid var(--focus); outline-offset: -1px; }
+
+/* ----------------------------------------------------------------- sources */
+
+.citations { margin-top: var(--space-4); font-size: .87rem; }
+.citations summary {
+  display: inline-flex; align-items: center; min-height: 44px;
+  cursor: pointer; color: var(--teal-800); font-weight: 620;
+}
+.citations ol { margin: var(--space-2) 0 0; padding-left: 22px; color: var(--text-secondary); }
+.citations li { margin-bottom: 4px; }
+
+/* ----------------------------------------------------------------- history */
+
+.history-controls {
+  display: flex; flex-wrap: wrap; gap: var(--space-3); align-items: center;
+  margin-bottom: var(--space-4);
+}
+.history-search {
+  min-height: 44px; padding: 8px 14px; font-size: .92rem; font-family: inherit;
+  border: 1px solid var(--border-control); border-radius: var(--radius-btn);
+  background: var(--bg-surface); min-width: 220px;
+}
+.filter-chips { display: flex; gap: var(--space-2); }
+.filter-chips .chip[aria-pressed="true"] {
+  background: var(--teal-800); color: #fff; border-color: var(--teal-800);
+}
+
+.table-panel { padding: var(--space-2) 0 0; overflow-x: auto; }
+.history-table { width: 100%; border-collapse: collapse; font-size: .9rem; }
+/* Replaces the inline styles the templates used to carry, so the type scale
+ * and spacing stay adjustable from here. */
+.h2-compact { font-size: 1.08rem; }
+.hint-spaced { margin: var(--space-3) 0 0; }
+.mt-2 { margin-top: var(--space-2); }
+.mb-2 { margin-bottom: var(--space-2); }
+.mb-5 { margin-bottom: var(--space-5); }
+.mt-3 { margin-top: var(--space-3); }
+.mt-4 { margin-top: var(--space-4); }
+.mb-0 { margin-bottom: 0; }
+.info-note-result { margin: 0 0 var(--space-6); }
+.no-match { padding: var(--space-5) var(--space-4); color: var(--text-secondary); margin: 0; }
+html.js .history-table tbody tr { cursor: pointer; }
+
+/* Long-form safety caveats were running ~160 characters per line at 1280px -
+ * the least readable measure on the site, on the copy that matters most. */
+.cannot-list li, .hint { max-width: 70ch; }
+
+.history-table th, .history-table td {
+  text-align: left; padding: 11px 16px; border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+}
+.history-table th {
+  color: var(--text-muted); font-weight: 600; font-size: .73rem;
+  text-transform: uppercase; letter-spacing: .08em;
+}
+.history-table tbody tr:hover { background: var(--bg-soft); }
+.history-table tbody tr:last-child td { border-bottom: 0; }
+.history-table td { font-variant-numeric: tabular-nums; }
+.result-dot {
+  display: inline-block; width: 9px; height: 9px; border-radius: 50%;
+  margin-right: 8px; vertical-align: 1px;
+}
+.dot-flag { background: var(--orange-700); }
+.dot-neutral { background: var(--border-strong); }
+
+.empty-state { text-align: center; padding: var(--space-7) var(--space-5); }
+.empty-state h2 { margin-bottom: var(--space-2); }
+.empty-state p { color: var(--text-secondary); margin: 0 0 var(--space-4); }
+
+/* ------------------------------------------------------------- about, help */
+
+.prose p { max-width: 70ch; }
+.cannot-list { margin: 0; padding-left: 20px; font-size: .94rem; }
+.cannot-list li { margin-bottom: 6px; }
+.page-sections > section { margin-bottom: var(--space-5); }
+
+.status-list { list-style: none; margin: 0; padding: 0; font-size: .92rem; }
+.status-list li { padding: 6px 0 6px 22px; position: relative; }
+.status-list li::before {
+  content: ""; position: absolute; left: 2px; top: 13px;
+  width: 9px; height: 9px; border-radius: 50%;
+}
+.status-list .ok::before { background: var(--green-700); }
+.status-list .warn::before { background: var(--orange-700); }
+.status-list .bad::before { background: var(--red-700); }
+
+.help-list details { border-bottom: 1px solid var(--border); padding: var(--space-3) 0; }
+.help-list summary {
+  display: flex; align-items: center; min-height: 44px;
+  cursor: pointer; font-weight: 620; font-size: .98rem;
+}
+.help-list details p, .help-list details ul { margin: var(--space-2) 0 0; color: var(--text-secondary); font-size: .93rem; max-width: 70ch; }
+
+/* ------------------------------------------------------------- error pages */
+
+.error-page { text-align: center; padding: var(--space-8) var(--space-4); }
+.error-code { font-size: 3.4rem; font-weight: 680; color: var(--text-muted); margin: 0; line-height: 1; }
+
+/* ------------------------------------------------------------------ footer */
+
+.site-footer {
+  background: var(--bg-surface); border-top: 1px solid var(--border);
+  padding: var(--space-6) 0; font-size: .82rem; color: var(--text-muted);
+  margin-top: var(--space-7);
+}
+.footer-brand { font-weight: 640; color: var(--text-primary); font-size: .95rem; margin: 0 0 var(--space-1); }
+.footer-tagline { margin: 0 0 var(--space-3); }
+.footer-links { display: flex; flex-wrap: wrap; gap: var(--space-4); margin: 0 0 var(--space-3); padding: 0; list-style: none; }
+.footer-links a { color: var(--text-secondary); text-decoration: none; }
+.footer-links a:hover { color: var(--teal-800); text-decoration: underline; }
+.footer-note { margin: 0 0 var(--space-1); color: var(--text-secondary); }
+.footer-meta { margin: 0; }
+
+/* -------------------------------------------------------------- responsive */
+
+@media (max-width: 1100px) {
+  .result-grid {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: "viewer" "advisory" "details";
+    gap: var(--space-5);
+  }
+  .rg-viewer { position: static; }
+  .landing-grid { grid-template-columns: minmax(0, 1fr); }
+  .result-summary { grid-template-columns: minmax(0, 1fr); gap: var(--space-4); }
+}
+
+@media (max-width: 768px) {
+  .wrap, .wrap-wide { width: calc(100% - 48px); }
+  .landing-secondary { grid-template-columns: minmax(0, 1fr); gap: var(--space-5); }
+  .result-summary { padding: var(--space-4); }
+  .hero { padding-top: var(--space-4); }
+}
+
+@media (max-width: 520px) {
+  .wrap, .wrap-wide { width: calc(100% - 32px); }
+  .upload-actions { flex-direction: column; }
+  .upload-actions .btn { width: 100%; }
+  .dropzone { padding: var(--space-6) var(--space-4); }
+  .dropzone-preview { flex-direction: column; align-items: flex-start; }
+  .result-head { flex-direction: column; align-items: stretch; }
+  .result-head-actions .btn { flex: 1; }
+  main { padding-top: var(--space-4); }
+}
+
+/* ------------------------------------------------------------------- print */
+
+@media print {
+  .site-header, .site-nav, .chat-panel, .result-head-actions, .btn,
+  .tab-labels, .chat-suggestions { display: none !important; }
+  body { background: #fff; }
+  .panel, .result-summary, .emergency-panel { box-shadow: none; break-inside: avoid; }
+  .rg-viewer { position: static; }
+  .scan-tabs .tab-panel { display: block !important; }
+  .analysis-details[open] summary { display: none; }
+
+  /* A collapsed <details> prints as its summary alone, so a sheet printed
+   * without expanding first lost the architecture, the threshold, the scan
+   * reference and the whole citation list - everything needed to audit the
+   * finding later. Force every disclosure open for print. */
+  details > *:not(summary) { display: revert !important; }
+
+  /* The footer was hidden, which took the safety disclaimer and the
+   * emergency numbers off the printed record. Keep them, quietly. */
+  .site-footer {
+    display: block !important;
+    border-top: 1px solid #999; margin-top: 16pt; padding-top: 8pt;
+    font-size: 9pt; color: #000;
+  }
+  .site-footer .footer-links, .site-footer .footer-tagline { display: none !important; }
+
+  /* Backgrounds default to off when printing, which erased the confidence
+   * bar entirely (it is background-colour only) and stripped the emergency
+   * panel of its framing. */
+  .confidence-bar, .confidence-bar span, .emergency-panel {
+    -webkit-print-color-adjust: exact; print-color-adjust: exact;
+  }
+  .confidence-bar { border: 1px solid #333; }
+  a[href]::after { content: ""; }
+  @page { margin: 14mm; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
+}

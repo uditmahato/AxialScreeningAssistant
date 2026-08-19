@@ -1,0 +1,25 @@
+# Custom CNN trained from scratch - the control arm of the architecture
+# comparison (Project Design 4.2). It has no pre-trained features, so there is
+# no head-only warm-up stage and it needs a longer schedule and stronger
+# regularisation to converge on a small dataset.
+
+training:
+  architecture: baseline_cnn
+  pretrained: false
+  batch_size: 32
+  epochs_head: 0            # nothing to freeze; skip stage 1 entirely
+  epochs_finetune: 60
+  lr_finetune: 0.0005
+  weight_decay: 0.0005
+  optimizer: adamw
+  scheduler: cosine
+  dropout: 0.5
+  early_stopping_patience: 12
+
+augmentation:
+  enabled: true
+  rotation_degrees: 20.0
+  zoom_range: 0.15
+  brightness: 0.25
+  contrast: 0.25
+  random_erasing_p: 0.15

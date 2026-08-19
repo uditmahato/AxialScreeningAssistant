@@ -1,0 +1,40 @@
+# ---------------------------------------------------------------------------
+# Grande International Hospital clinical dataset.
+#
+# ==> DO NOT RUN THIS CONFIG UNTIL BOTH ARE SIGNED: <==
+#       1. Institutional research ethics approval
+#       2. Grande International Hospital Data Sharing Agreement
+#     Project commitment: none of the data will be used for training until
+#     full ethical approval has been granted.
+#
+# scripts/prepare_data.py refuses to run this config unless
+# data/raw/grande/ETHICS_APPROVED marker file is present. See docs/ETHICS.md.
+# ---------------------------------------------------------------------------
+
+dataset:
+  name: grande
+  adapter: manifest           # driven by data/raw/grande/manifest.csv
+  source_dir: data/raw/grande
+  task: binary
+  class_names: [normal, abnormal]
+  # Slices from one patient must never straddle the train/test boundary.
+  patient_id_pattern: '^(?P<patient_id>[A-Z]{2,4}\d{3,6})'
+  # Public data supplements the ~500 clinical images without contaminating
+  # the test split - see neuroscan.data.splits.build_splits.
+  supplementary: [br35h]
+
+split:
+  group_by_patient: true      # non-negotiable for clinical data
+  stratify: true
+
+training:
+  architecture: efficientnet_b0
+  batch_size: 16              # ~500 images; smaller batches give more steps
+  epochs_head: 15
+  epochs_finetune: 35
+  early_stopping_patience: 12
+  class_weighting: true
+
+evaluation:
+  run_cross_validation: true  # small dataset => single split is high variance
+  cv_folds: 5

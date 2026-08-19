@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="{{ language }}">
+<head>
+  <meta charset="utf-8">
+  {# Set before first paint: the mobile nav collapse is gated on html.js, and
+     setting it from the deferred script at end of body made every page paint
+     the expanded nav and then jump. #}
+  <script>document.documentElement.className += ' js';</script>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}{{ t.app_title }}{% endblock %}</title>
+  <meta name="description" content="{{ t.tagline }}">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  {# The brand mark, not an emoji: a scan plate with one focus point. #}
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='2.2' y='2.2' width='27.6' height='27.6' rx='7' fill='none' stroke='%2309534D' stroke-width='2.8'/%3E%3Cpath d='M16 6.5v5.5M16 20v5.5M6.5 16H12M20 16h5.5' stroke='%2309534D' stroke-width='2.8' stroke-linecap='round' fill='none'/%3E%3Ccircle cx='20.6' cy='11.4' r='3.4' fill='%23C9571B'/%3E%3C/svg%3E">
+</head>
+<body>
+
+<a class="skip-link" href="#main">{{ t.skip_to_content }}</a>
+
+{% set endpoint = request.endpoint or '' %}
+<header class="site-header" id="site-header">
+  <div class="wrap header-inner">
+    <a class="brand" href="{{ url_for('index') }}">
+      {# Scan plate with crosshair and one heat-focus dot: what this tool does. #}
+      <svg class="brand-mark" viewBox="0 0 32 32" width="34" height="34" aria-hidden="true">
+        <rect x="2.2" y="2.2" width="27.6" height="27.6" rx="7"
+              fill="none" stroke="currentColor" stroke-width="2.4"/>
+        <path d="M16 6.5v5.5M16 20v5.5M6.5 16H12M20 16h5.5"
+              stroke="currentColor" stroke-width="2.4" stroke-linecap="round" fill="none"/>
+        <circle class="focus-dot" cx="20.6" cy="11.4" r="3.1"/>
+      </svg>
+      <span>
+        <strong>{% if language == 'ne' %}एक्सियल <span>स्क्रिनिङ सहायक</span>{% else %}Axial <span>Screening Assistant</span>{% endif %}</strong>
+        <small>{{ t.tagline }}</small>
+      </span>
+    </a>
+
+    <button type="button" class="nav-toggle" id="nav-toggle"
+            aria-expanded="false" aria-controls="site-nav">
+      <svg viewBox="0 0 20 20" width="16" height="16" aria-hidden="true">
+        <path d="M3 5h14M3 10h14M3 15h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+      </svg>
+      {% if language == 'ne' %}मेनु{% else %}Menu{% endif %}
+    </button>
+
+    <nav class="site-nav" id="site-nav">
+      <a href="{{ url_for('index') }}"
+         {% if endpoint in ('index', 'analyse', 'result') %}class="is-active" aria-current="page"{% endif %}>{{ t.nav_scan }}</a>
+      <a href="{{ url_for('history') }}"
+         {% if endpoint == 'history' %}class="is-active" aria-current="page"{% endif %}>{{ t.nav_history }}</a>
+      <a href="{{ url_for('about') }}"
+         {% if endpoint == 'about' %}class="is-active" aria-current="page"{% endif %}>{{ t.nav_about }}</a>
+      <a href="{{ url_for('help_page') }}"
+         {% if endpoint == 'help_page' %}class="is-active" aria-current="page"{% endif %}>{{ t.nav_help }}</a>
+      <a class="lang-toggle" href="?lang={{ other_language }}" rel="nofollow">{{ t.language }}</a>
+    </nav>
+  </div>
+</header>
+
+{% if not status.model %}
+<div class="wrap mt-4">
+  <div class="alert alert-error" role="alert">
+    <strong>{% if language == 'ne' %}मोडेल उपलब्ध छैन।{% else %}No trained model is loaded.{% endif %}</strong>
+    {# Both languages get the same actionable command; only the prose differs. #}
+    <span>{% if language == 'ne' %}प्रशासकले पहिले यो चलाउनुपर्छ: <code>python scripts/train.py --config efficientnet_b0</code>{% else %}Run <code>python scripts/train.py --config efficientnet_b0</code> first.{% endif %}</span>
+  </div>
+</div>
+{% elif not status.llm and request.endpoint == 'index' %}
+<div class="wrap mt-4">
+  <div class="alert alert-warn" role="status">{{ t.degraded_notice }}</div>
+</div>
+{% endif %}
+
+<main id="main" tabindex="-1" class="wrap {% block wrap_class %}{% endblock %}">
+  {% block content %}{% endblock %}
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <p class="footer-brand">{{ t.app_title }}</p>
+    <p class="footer-tagline">{{ t.footer_tagline }}</p>
+    <ul class="footer-links">
+      <li><a href="{{ url_for('index') }}">{{ t.nav_scan }}</a></li>
+      <li><a href="{{ url_for('about') }}">{{ t.nav_about }}</a></li>
+      <li><a href="{{ url_for('help_page') }}">{{ t.nav_help }}</a></li>
+    </ul>
+    {# Ethics 5.3: a persistent reminder on every page. Quiet, not a banner. #}
+    <p class="footer-note">{{ disclaimer_short }}</p>
+    <p class="footer-meta">
+      {% if language == 'ne' %}
+        आपतकालीन नम्बर: एम्बुलेन्स <strong>१०२</strong> | प्रहरी <strong>१००</strong>
+      {% else %}
+        Emergency: Ambulance <strong>102</strong> | Police <strong>100</strong>
+      {% endif %}
+      &nbsp;·&nbsp;
+      {% if language == 'ne' %}अनुसन्धानमूलक प्रणाली। प्रमाणित चिकित्सा उपकरण होइन।{% else %}Research prototype. Not a certified medical device.{% endif %}
+    </p>
+  </div>
+</footer>
+
+<script src="{{ url_for('static', filename='js/app.js') }}" defer></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

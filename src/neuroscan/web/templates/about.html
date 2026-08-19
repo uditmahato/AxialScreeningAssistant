@@ -1,0 +1,193 @@
+{% extends "base.html" %}
+{% block title %}{{ t.nav_about }} · {{ t.app_title }}{% endblock %}
+
+{% block content %}
+<h1 class="mb-5">{{ t.nav_about }}</h1>
+
+<div class="page-sections">
+
+<section class="panel prose">
+  <h2>{% if language == 'ne' %}यसले के गर्छ{% else %}What it does{% endif %}</h2>
+  <p>
+    {% if language == 'ne' %}
+      यो प्रणालीले मस्तिष्कको अक्षीय MRI तस्बिरलाई सामान्य वा असामान्य वर्गीकरण
+      गर्छ। Grad-CAM मार्फत मोडेलले कहाँ हेर्‍यो देखाउँछ। प्रमाणित ज्ञान-भण्डारबाट
+      सल्लाह दिन्छ। यो नेपालका जिल्ला अस्पतालहरूका लागि बनाइएको हो जहाँ रेडियोलोजिस्टको
+      प्रतिवेदन आउन हप्तौं लाग्न सक्छ।
+    {% else %}
+      This system reads an axial brain MRI and calls it normal or abnormal. It
+      shows which part of the image drove that call, using Grad-CAM. It then gives
+      advice drawn from a verified knowledge base. It is built for district
+      facilities in Nepal, where a radiologist's report can take weeks to arrive.
+    {% endif %}
+  </p>
+
+  <h2>{% if language == 'ne' %}नेपालको सन्दर्भ{% else %}Why the Nepal context matters{% endif %}</h2>
+  <p>
+    {% if language == 'ne' %}
+      नेपालमा न्यूरोसिस्टिसर्कोसिस र क्षयरोग (ट्युबरकुलोमा) मस्तिष्कको गाँठोका सामान्य
+      कारण हुन्। यी स्क्यानमा क्यान्सर जस्तै देखिन्छन्, तर दुवैको उपचार सम्भव छ।
+      त्यसैले यो प्रणालीको ज्ञान-भण्डार नेपालको वास्तविकता अनुसार तयार गरिएको छ।
+    {% else %}
+      In Nepal, neurocysticercosis and tuberculoma are among the most common causes
+      of a brain lesion. On a scan, both look like tumours. Both are treatable with
+      medicine. A system built on Western data would rank tumour first and send a
+      family toward surgery they may not be able to afford. The knowledge base
+      behind this system is weighted for Nepal to prevent exactly that.
+    {% endif %}
+  </p>
+</section>
+
+{% if model_metadata %}
+<section class="panel">
+  <h2>{% if language == 'ne' %}मोडेल विवरण{% else %}Model overview{% endif %}</h2>
+  <table class="spec-table">
+    <tr><th>Architecture</th><td><code>{{ model_metadata.architecture }}</code></td></tr>
+    <tr>
+      <th>{% if language == 'ne' %}कार्य{% else %}Task{% endif %}</th>
+      <td>{% if language == 'ne' %}द्वि-वर्गीय वर्गीकरण{% else %}Binary classification{% endif %}</td>
+    </tr>
+    <tr>
+      <th>{% if language == 'ne' %}वर्गहरू{% else %}Classes{% endif %}</th>
+      <td>{{ model_metadata.class_names | join(', ') }}</td>
+    </tr>
+    <tr>
+      <th>{% if language == 'ne' %}इनपुट{% else %}Input{% endif %}</th>
+      <td>
+        {% if language == 'ne' %}एउटा अक्षीय मस्तिष्क MRI तस्बिर{% else %}Single axial brain MRI image{% endif %}
+        {% if model_metadata.preprocessing %}({{ model_metadata.preprocessing.image_size }} × {{ model_metadata.preprocessing.image_size }} px){% endif %}
+      </td>
+    </tr>
+  </table>
+</section>
+{% endif %}
+
+{% if cv_stats and cv_stats.aggregate %}
+<section class="panel">
+  <h2>{% if language == 'ne' %}मापन गरिएको प्रदर्शन{% else %}Validation performance{% endif %}</h2>
+  <table class="spec-table cv-table">
+    <thead>
+      <tr>
+        <th>{% if language == 'ne' %}मापन{% else %}Metric{% endif %}</th>
+        <th>{% if language == 'ne' %}मान{% else %}Value{% endif %}</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for key, label, label_ne in [('accuracy', 'Accuracy', 'शुद्धता (Accuracy)'),
+                            ('recall', 'Recall, abnormal', 'संवेदनशीलता (Recall)'),
+                            ('specificity', 'Specificity', 'विशिष्टता (Specificity)'),
+                            ('auc_roc', 'AUC-ROC', 'AUC-ROC')] %}
+      {% if key in cv_stats.aggregate %}
+      <tr>
+        <td>{{ label_ne if language == 'ne' else label }}</td>
+        <td>{{ '%.2f'|format(cv_stats.aggregate[key]['mean'] * 100) }}% &plusmn; {{ '%.2f'|format(cv_stats.aggregate[key]['std'] * 100) }}</td>
+      </tr>
+      {% endif %}
+      {% endfor %}
+    </tbody>
+  </table>
+  <p class="hint">
+    {% if language == 'ne' %}
+      यी मानहरू {{ cv_stats.n_folds }}-फोल्ड क्रस-भ्यालिडेसनबाट आएका हुन्। यी
+      मूल्याङ्कन डेटासेटको प्रदर्शन हुन् र हरेक क्लिनिकल सेटिङमा उही प्रदर्शनको
+      ग्यारेन्टी गर्दैनन्।
+    {% else %}
+      These figures are from {{ cv_stats.n_folds }}-fold cross-validation. They
+      describe performance on the evaluation dataset and do not guarantee
+      identical performance in every clinical setting.
+    {% endif %}
+  </p>
+</section>
+{% elif model_metadata and model_metadata.metrics %}
+<section class="panel">
+  <h2>{% if language == 'ne' %}मापन गरिएको प्रदर्शन{% else %}Validation performance{% endif %}</h2>
+  <table class="spec-table">
+    <tr><th>Test accuracy</th><td>{{ '%.2f'|format(model_metadata.metrics.get('accuracy', 0) * 100) }}%</td></tr>
+    <tr><th>Test recall</th><td>{{ '%.2f'|format(model_metadata.metrics.get('recall', 0) * 100) }}%</td></tr>
+    <tr><th>Test AUC-ROC</th><td>{{ '%.2f'|format(model_metadata.metrics.get('auc_roc', 0) * 100) }}%</td></tr>
+  </table>
+  <p class="hint">
+    {% if language == 'ne' %}
+      यी नतिजा परीक्षण डेटामा आधारित हुन्। वास्तविक प्रयोगमा फरक हुन सक्छ।
+    {% else %}
+      These figures describe held-out test data. Real-world performance on scanners
+      unlike those in the training set may be materially different.
+    {% endif %}
+  </p>
+</section>
+{% endif %}
+
+<section class="panel">
+  <h2>{% if language == 'ne' %}मोडेलले के निर्धारण गर्न सक्दैन{% else %}What the model cannot determine{% endif %}</h2>
+  <ul class="cannot-list">
+    {% if language == 'ne' %}
+      <li>कुन रोग हो। यसले सामान्य र असामान्य मात्र छुट्याउँछ।</li>
+      <li>ट्युमरको प्रकार वा रोगको गम्भीरता।</li>
+      <li>रोग छैन भन्ने पुष्टि। "असामान्य ढाँचा भेटिएन" भनेको रोगमुक्त भनेको होइन।</li>
+      <li>अरू स्लाइस, अरू अनुक्रम वा बिरामीको इतिहासमा के छ।</li>
+      <li>उपचार, औषधिको मात्रा वा रोगको भविष्य। ती निर्णय चिकित्सकका हुन्।</li>
+    {% else %}
+      <li>Which disease is present. It only separates normal from abnormal patterns.</li>
+      <li>Tumour type or disease severity.</li>
+      <li>That disease is absent. "No abnormal pattern detected" is not an all-clear.</li>
+      <li>Anything outside the single uploaded image: other slices, other sequences, clinical history.</li>
+      <li>Treatment, medication dosage or prognosis. Those decisions belong to a clinician.</li>
+    {% endif %}
+  </ul>
+</section>
+
+<section class="panel prose">
+  <h2>{% if language == 'ne' %}हाइलाइट गरिएका भाग (Grad-CAM){% else %}Highlighted areas (Grad-CAM){% endif %}</h2>
+  <p>
+    {% if language == 'ne' %}
+      हाइलाइट गरिएको तस्बिरले मोडेलको वर्गीकरणमा सबैभन्दा धेरै योगदान गरेका
+      भागहरू देखाउँछ। यो मोडेलको ध्यान बुझ्ने माध्यम हो। यसले कुनै रोगको ठाउँ
+      पहिचान गर्दैन। हाइलाइट मस्तिष्कको तन्तुमा नभई खोपडी वा तस्बिरको किनारामा
+      छ भने नतिजामा भर नपर्नुहोस्।
+    {% else %}
+      The highlighted image shows the regions that contributed most strongly to
+      the model's classification. It is a way of inspecting what the model
+      attended to. It does not identify the location of a specific disease. If
+      the highlight sits on the skull or the image edge rather than brain
+      tissue, do not trust the result.
+    {% endif %}
+  </p>
+
+  <h2>{% if language == 'ne' %}चिकित्सकीय सल्लाह{% else %}The clinical advisory{% endif %}</h2>
+  <p>
+    {% if language == 'ne' %}
+      चिकित्सकीय सन्दर्भ खण्ड वर्गीकरणकर्ताबाट अलग तयार हुन्छ। यसले स्क्यानको
+      नतिजा र समीक्षा गरिएको चिकित्सा ज्ञान-भण्डार प्रयोग गरेर सम्भावित कारण र
+      अर्को कदम सुझाउँछ। त्यहाँ देखिने रोगका नामहरू सम्भावना हुन्, मोडेलको
+      निदान होइनन्।
+    {% else %}
+      The clinical context section is generated separately from the classifier.
+      It uses the scan result together with a reviewed medical knowledge base
+      to suggest possible causes and next steps. Disease names that appear
+      there are possibilities to discuss with a clinician, not diagnoses made
+      by the model.
+    {% endif %}
+  </p>
+</section>
+
+<section class="panel">
+  <h2>{% if language == 'ne' %}प्रणालीको अवस्था{% else %}System status{% endif %}</h2>
+  <ul class="status-list">
+    <li class="{{ 'ok' if status.model else 'bad' }}">
+      {% if language == 'ne' %}वर्गीकरणकर्ता {{ 'तयार छ' if status.model else 'उपलब्ध छैन' }}{% else %}Classifier {{ 'loaded' if status.model else 'unavailable' }}{% endif %}
+    </li>
+    <li class="{{ 'ok' if status.rag else 'bad' }}">
+      {% if language == 'ne' %}ज्ञान-भण्डार {{ 'तयार छ' if status.rag else 'उपलब्ध छैन' }}{% else %}Knowledge base {{ 'indexed' if status.rag else 'unavailable' }}{% endif %}
+    </li>
+    <li class="{{ 'ok' if status.llm else 'warn' }}">
+      {% if language == 'ne' %}
+        भाषा मोडेल {% if status.llm %}तयार छ ({{ status.llm_provider }}){% else %}उपलब्ध छैन, स्रोत सामग्री सिधै देखाइन्छ{% endif %}
+      {% else %}
+        Language model {% if status.llm %}ready ({{ status.llm_provider }}){% else %}unavailable, source text shown directly{% endif %}
+      {% endif %}
+    </li>
+  </ul>
+</section>
+
+</div>
+{% endblock %}
