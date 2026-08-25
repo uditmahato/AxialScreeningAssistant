@@ -1,0 +1,27 @@
+# VGG16 transfer learning.
+#
+# VGG16's classifier head is very wide (25088 -> 4096 -> 4096), which makes it
+# both memory-hungry and prone to overfitting a few hundred MRI slices. Two
+# adjustments follow from that: a smaller batch to fit 8GB of VRAM alongside
+# activations, and heavier dropout in the replacement head.
+
+training:
+  architecture: vgg16
+  pretrained: true
+  batch_size: 16
+  epochs_head: 12
+  epochs_finetune: 20
+  lr_head: 0.0005
+  lr_finetune: 0.00001
+  weight_decay: 0.0005
+  optimizer: adamw
+  scheduler: cosine
+  dropout: 0.5
+  # VGG16's feature stack has 13 Conv2d layers (no BatchNorm in the torchvision
+  # build), and its parameters are heavily back-loaded: the last two blocks
+  # alone are ~88% of the network. Reopening 3 layers means the final block
+  # only - about 47% trainable, which is the most that is defensible on a few
+  # hundred images. Measured with scripts/train.py --config vgg16.
+  unfreeze_layers: 3
+  early_stopping_patience: 8
+  mixed_precision: true

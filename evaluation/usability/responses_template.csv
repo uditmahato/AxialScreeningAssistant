@@ -1,0 +1,2 @@
+participant_id,role,language,years_experience,device,q1,q2,q3,q4,q5,q6,q7,q8,q9,q10,understood_not_diagnosis,would_trust,language_clear,comments,difficulties
+P01,medical_student,en,0-2,laptop,4,2,4,2,4,2,4,2,4,2,yes,with_doctor,yes,"Example row - delete before use","Example row - delete before use"

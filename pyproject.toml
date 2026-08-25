@@ -1,0 +1,86 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "axial-screening-assistant"
+version = "1.0.0"
+description = "Brain MRI screening support and bilingual clinical advisory for resource-limited healthcare settings"
+readme = "README.md"
+# 3.11 is the floor: the codebase uses the `datetime.UTC` alias, added in 3.11.
+# 3.13 is excluded because several dependencies in this stack have no wheels
+# for it yet.
+requires-python = ">=3.11,<3.13"
+license = { text = "MIT" }
+keywords = ["medical-imaging", "mri", "brain-tumor", "deep-learning", "rag", "clinical-decision-support"]
+
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Healthcare Industry",
+    "Intended Audience :: Science/Research",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Scientific/Engineering :: Medical Science Apps.",
+]
+
+# Runtime dependencies live in requirements.txt because PyTorch must be
+# installed from the CUDA wheel index before the rest of the stack.
+dependencies = []
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0", "pytest-cov>=5.0", "ruff>=0.4"]
+
+# No console_scripts entry point. An earlier version declared
+# neuroscan = "neuroscan.cli:main", which pointed at a module that does not
+# exist, so `pip install -e .` produced a broken `neuroscan` command. The
+# documented interface is the scripts/ directory; see docs/SETUP.md.
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+neuroscan = ["web/templates/**/*", "web/static/**/*", "resources/**/*"]
+
+# ---------------------------------------------------------------------------
+# Tooling
+# ---------------------------------------------------------------------------
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+src = ["src", "scripts", "tests"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "UP", "B", "C4", "SIM", "RUF"]
+ignore = [
+    "E501",   # line length is handled by the formatter
+    "B008",   # function calls in argument defaults (used for config factories)
+    "N812",   # torch.nn.functional as F is idiomatic
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["N802", "N806"]
+# The safety patterns deliberately contain non-ASCII characters that look like
+# ASCII ones: an en dash, because models emit en-dashed numeric ranges, and
+# Devanagari, because Nepali output must be screened too. Both are functional,
+# not typos.
+"src/neuroscan/rag/advisory.py" = ["RUF001", "RUF003"]
+"src/neuroscan/safety.py" = ["RUF001", "RUF003"]
+# textfmt is the module that REMOVES em and en dashes; the characters appear
+# in its patterns and in the tests that prove they are removed.
+"src/neuroscan/textfmt.py" = ["RUF001", "RUF003"]
+"tests/test_textfmt.py" = ["RUF001", "RUF003"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+addopts = "-q --strict-markers"
+markers = [
+    "slow: tests that train models or build indexes (deselect with '-m \"not slow\"')",
+    "requires_data: tests that need a downloaded dataset",
+    "requires_llm: tests that need a running Ollama server",
+]
+
+[tool.coverage.run]
+source = ["src/neuroscan"]
+omit = ["*/web/templates/*", "*/__main__.py"]

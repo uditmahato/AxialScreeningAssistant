@@ -1,0 +1,138 @@
+{% extends "base.html" %}
+{% block title %}{{ t.nav_help }} · {{ t.app_title }}{% endblock %}
+
+{% block content %}
+<h1 class="mb-5">{{ t.nav_help }}</h1>
+
+<div class="panel help-list">
+
+  <details>
+    <summary>{% if language == 'ne' %}कस्तो तस्बिर अपलोड गर्ने?{% else %}What image should I upload?{% endif %}</summary>
+    <p>
+      {% if language == 'ne' %}
+        मस्तिष्कको अक्षीय (माथिबाट काटिएको) MRI तस्बिर, JPG वा PNG ढाँचामा।
+        पूरा टाउको तस्बिरभित्र हुनुपर्छ र बिरामीको नाम वा नम्बर हटाइएको हुनुपर्छ।
+      {% else %}
+        An axial brain MRI, the horizontal cross-section, as a JPG or PNG. The
+        whole head should be in frame, and the patient's name or ID must be
+        cropped out before uploading.
+      {% endif %}
+    </p>
+  </details>
+
+  <details>
+    <summary>{% if language == 'ne' %}"सामान्य" भनेको के हो?{% else %}What does Normal mean?{% endif %}</summary>
+    <p>
+      {% if language == 'ne' %}
+        वर्गीकरणकर्ताले यस तस्बिरमा आफ्नो निर्णय सीमाभन्दा माथि असामान्य ढाँचा
+        भेटेन। यसले रोग छैन भन्ने पुष्टि गर्दैन। लक्षण छन् भने चिकित्सकीय जाँच
+        अझै आवश्यक छ।
+      {% else %}
+        The classifier did not detect an abnormal pattern above its decision
+        threshold in this one image. It does not confirm the absence of
+        disease. If symptoms are present, clinical review is still needed.
+      {% endif %}
+    </p>
+  </details>
+
+  <details>
+    <summary>{% if language == 'ne' %}"असामान्य" भनेको के हो?{% else %}What does Abnormal mean?{% endif %}</summary>
+    <p>
+      {% if language == 'ne' %}
+        वर्गीकरणकर्ताले चिकित्सकीय पुनरावलोकन गर्नुपर्ने ढाँचा भेट्यो। यो कुनै
+        रोगको निदान होइन। कारण धेरै हुन सक्छन्, र नेपालमा उपचार सम्भव संक्रमण
+        पनि सामान्य कारण हुन्।
+      {% else %}
+        The classifier flagged a pattern that should be reviewed by a
+        clinician. It is not a diagnosis of any particular disease. Many
+        causes are possible, and in Nepal treatable infections are among the
+        common ones.
+      {% endif %}
+    </p>
+  </details>
+
+  <details>
+    <summary>{% if language == 'ne' %}मोडेलको विश्वसनीयता के हो?{% else %}What is model confidence?{% endif %}</summary>
+    <p>
+      {% if language == 'ne' %}
+        वर्गीकरणकर्ता आफ्नो नतिजामा कति ढुक्क छ भन्ने मापन हो। यो कुनै खास रोग
+        हुने सम्भावना होइन। उच्च विश्वसनीयता भए पनि चिकित्सकीय पुनरावलोकन
+        आवश्यक छ।
+      {% else %}
+        A measure of how strongly the classifier favoured its result. It is
+        not the probability that the patient has a specific disease. Even a
+        high-confidence result needs clinical review.
+      {% endif %}
+    </p>
+  </details>
+
+  <details>
+    <summary>{% if language == 'ne' %}हाइलाइट गरिएको तस्बिरले के देखाउँछ?{% else %}What does the highlighted image show?{% endif %}</summary>
+    <p>
+      {% if language == 'ne' %}
+        मोडेलको वर्गीकरणमा सबैभन्दा धेरै योगदान गरेका भागहरू (Grad-CAM)। यसले
+        कुनै रोगको ठाउँ पहिचान गर्दैन।
+      {% else %}
+        The regions that contributed most strongly to the model's
+        classification (Grad-CAM). It does not identify the location of a
+        specific disease.
+      {% endif %}
+    </p>
+  </details>
+
+  <details>
+    <summary>{% if language == 'ne' %}चिकित्सकीय सल्लाह के हो?{% else %}What is the clinical advisory?{% endif %}</summary>
+    <p>
+      {% if language == 'ne' %}
+        वर्गीकरणकर्ताबाट अलग तयार हुने खण्ड हो, जसले समीक्षा गरिएको चिकित्सा
+        ज्ञान-भण्डारका आधारमा सम्भावित कारण र अर्को कदम सुझाउँछ। त्यहाँ देखिने
+        रोगहरू सम्भावना हुन्, निदान होइनन्।
+      {% else %}
+        A section generated separately from the classifier. It draws on a
+        reviewed medical knowledge base to suggest possible causes and next
+        steps. Diseases named there are possibilities, not diagnoses.
+      {% endif %}
+    </p>
+  </details>
+
+  <details>
+    <summary>{% if language == 'ne' %}कहिले तुरुन्त अस्पताल जाने?{% else %}When is urgent care needed?{% endif %}</summary>
+    <p>{{ emergency_instruction }}</p>
+    <ul>
+      {% for flag in red_flags %}<li>{{ flag }}</li>{% endfor %}
+    </ul>
+  </details>
+
+  <details>
+    <summary>{% if language == 'ne' %}औषधिको मात्रा किन बताउँदैन?{% else %}Why can it not recommend medication doses?{% endif %}</summary>
+    <p>
+      {% if language == 'ne' %}
+        औषधि, मात्रा र अवधिको निर्णय बिरामीको पूरा अवस्था हेरेर योग्य चिकित्सकले
+        मात्र गर्नुपर्छ। त्यसैले यो प्रणालीले मात्रा सम्बन्धी प्रश्नको उत्तर
+        दिँदैन।
+      {% else %}
+        The medicine, dose and duration must be decided by a qualified
+        clinician who has reviewed the whole patient. This system therefore
+        declines dosage questions by design.
+      {% endif %}
+    </p>
+  </details>
+
+  <details>
+    <summary>{% if language == 'ne' %}स्रोतहरू कसरी प्रयोग हुन्छन्?{% else %}How are sources used?{% endif %}</summary>
+    <p>
+      {% if language == 'ne' %}
+        हरेक उत्तर समीक्षा गरिएको ज्ञान-भण्डारबाट लिइएको सामग्रीमा आधारित हुन्छ,
+        र प्रयोग भएका स्रोतहरू उत्तरसँगै देखाइन्छन्। भण्डारमा उत्तर छैन भने
+        प्रणालीले अनुमान गर्दैन।
+      {% else %}
+        Every answer is grounded in material retrieved from a reviewed
+        knowledge base, and the sources used are listed with the answer. When
+        the knowledge base does not cover a question, the system says so
+        rather than guessing.
+      {% endif %}
+    </p>
+  </details>
+
+</div>
+{% endblock %}

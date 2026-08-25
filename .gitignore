@@ -1,0 +1,113 @@
+﻿# ---------------------------------------------------------------------------
+# Axial Screening Assistant - version control exclusions
+#
+# NOTE ON CLINICAL DATA: data/ is excluded in its entirety except for the
+# README and the manifest schema. Anonymised MRI scans from Grande
+# International Hospital must NEVER enter git history, even in a private
+# repository (see docs/ETHICS.md).
+# ---------------------------------------------------------------------------
+
+# Clinical and training data
+data/
+!data/README.md
+!data/.gitkeep
+
+# Usability demo scans: derived from a third-party dataset whose
+# redistribution terms are the publisher's to set. Regenerate with
+# scripts/prepare_demo_scans.py.
+evaluation/usability/sample_scans/*.jpg
+evaluation/usability/sample_scans/ANSWER_KEY.json
+
+# Real usability responses contain participant data
+evaluation/usability/responses.csv
+
+# Model weights, indexes, and run artefacts
+artifacts/
+runs/
+*.pt
+*.pth
+*.ckpt
+*.onnx
+*.faiss
+*.index
+
+# Generated reports and uploads
+instance/
+uploads/
+outputs/
+*.pdf
+!docs/**/*.pdf
+!evaluation/usability/forms/*.pdf
+
+# Secrets
+.env
+.env.local
+*.key
+*.pem
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Environments
+.venv/
+venv/
+ENV/
+env/
+
+# Testing and coverage
+.pytest_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+.nox/
+coverage.xml
+*.cover
+
+# Type checkers / linters
+.mypy_cache/
+.dmypy.json
+.ruff_cache/
+.pytype/
+
+# Notebooks
+.ipynb_checkpoints/
+notebooks/**/*.html
+
+# Logs
+*.log
+logs/
+lightning_logs/
+wandb/
+mlruns/
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editors
+.vscode/
+.idea/
+*.swp
+*.swo
+*~

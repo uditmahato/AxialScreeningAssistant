@@ -1,0 +1,250 @@
+{% extends "base.html" %}
+{% block title %}{{ t.result }} · {{ t.app_title }}{% endblock %}
+{% block wrap_class %}wrap-wide{% endblock %}
+
+{% block content %}
+
+<div class="result-head">
+  <a class="btn btn-ghost" href="{{ url_for('index') }}">&larr; {{ t.new_scan }}</a>
+  <span class="scan-ref"><code>{{ result.scan_ref }}</code></span>
+  <div class="result-head-actions">
+    <button type="button" class="btn btn-ghost" id="print-btn" hidden>{{ t.print }}</button>
+    <a class="btn btn-secondary" href="{{ url_for('report', analysis_id=result.analysis_id) }}">
+      {{ t.download_report }}
+    </a>
+  </div>
+</div>
+
+<section class="result-summary {{ 'is-abnormal' if result.is_abnormal }}">
+  <div>
+    <span class="eyebrow">{{ t.model_result_label }}</span>
+    <h1 class="verdict-title">
+      {{ t.verdict_abnormal if result.is_abnormal else t.verdict_normal }}
+    </h1>
+    <p class="verdict-note">
+      {{ t.verdict_abnormal_note if result.is_abnormal else t.verdict_normal_note }}
+    </p>
+  </div>
+  <div class="confidence-block">
+    <span class="eyebrow">{{ t.confidence }}</span>
+    <span class="confidence-value">{{ '%.1f'|format(result.confidence * 100) }}%</span>
+    <div class="confidence-bar" aria-hidden="true">
+      <span style="width: {{ '%.1f'|format(result.confidence * 100) }}%"></span>
+    </div>
+    <p class="confidence-note">{{ t.confidence_note }}</p>
+  </div>
+</section>
+
+{# Spec: the complete disclaimer lives near the actual result, once, and it
+   comes from neuroscan.safety - never inlined here or in the string table. #}
+<aside class="info-note info-note-result" role="note">
+  <svg viewBox="0 0 20 20" width="18" height="18" aria-hidden="true">
+    <circle cx="10" cy="10" r="8.6" fill="none" stroke="currentColor" stroke-width="1.6"/>
+    <path d="M10 9v5M10 6.2v.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+  </svg>
+  <p>{{ disclaimer }}</p>
+</aside>
+
+<div class="result-grid">
+
+  <div class="rg-viewer">
+    <div class="panel scan-tabs">
+      <input type="radio" name="scan-tab" id="tab-original" class="tab-radio" checked>
+      <input type="radio" name="scan-tab" id="tab-heatmap" class="tab-radio">
+      <div class="tab-labels">
+        <label for="tab-original">{{ t.tab_original }}</label>
+        <label for="tab-heatmap">{{ t.tab_highlighted }}</label>
+      </div>
+
+      <figure class="tab-panel tab-panel-original">
+        <img src="{{ result.scan_image_url }}" alt="{{ t.alt_scan }}">
+        <figcaption>{% if language == 'ne' %}अपलोड गरिएको स्क्यान, पूर्वप्रशोधित{% else %}Uploaded scan, preprocessed{% endif %}</figcaption>
+      </figure>
+
+      <figure class="tab-panel tab-panel-heatmap">
+        {% if result.heatmap_failed %}
+        {# A blank map is a known failure of the explanation step, not
+           "the model saw nothing". Say so instead of showing an
+           uninterpretable black square. #}
+        <div class="heatmap-missing" role="note">
+          <p><strong>{{ t.heatmap_unavailable }}</strong></p>
+          <p>{{ t.heatmap_unavailable_note }}</p>
+        </div>
+        {% else %}
+        <img src="{{ result.heatmap_image_url }}" alt="{{ t.alt_heatmap }}">
+        <figcaption>
+          {{ t.heatmap_what }} (Grad-CAM)<br>
+          {{ t.heatmap_not_disease }}
+        </figcaption>
+        {% endif %}
+      </figure>
+
+      {% if result.heatmap_is_diffuse and not result.heatmap_failed %}
+      <div class="alert alert-warn mt-3 mb-0">
+        {% if language == 'ne' %}
+          मोडेलको ध्यान कुनै एक ठाउँमा केन्द्रित छैन। यसले निश्चित भाग देखाउन
+          सकेको छैन। यो व्याख्या सावधानीपूर्वक हेर्नुहोस्।
+        {% else %}
+          The model's attention is spread out rather than focused on one region.
+          This heat map does not point at a specific finding. Treat it with caution.
+        {% endif %}
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="rg-advisory">
+
+    {% if result.advisory_text or result.advisory_structured %}
+    <section class="panel clinical-context">
+      <span class="eyebrow">{{ t.clinical_context_label }}</span>
+      <h2>{{ t.advisory_title }}</h2>
+      <p class="hint context-note">{{ t.clinical_context_note }}</p>
+
+      {% if result.advisory_degraded %}
+      <div class="alert alert-warn">
+        <strong>{{ t.advisory_limited_title }}</strong>
+        {{ t.advisory_limited_body }}
+      </div>
+      {% endif %}
+
+      {% if result.advisory_structured %}
+      {# The model returned validated JSON; the page controls presentation. #}
+      {% set advisory = result.advisory_structured %}
+      <div class="advisory">
+        <p class="advisory-summary">{{ advisory.summary }}</p>
+
+        {# Guarded on the classification as well as the data: a normal result
+           must never show a disease list, whatever the model returned. #}
+        {% if advisory.possible_causes and result.is_abnormal %}
+        <h3>{{ t.possible_causes }}</h3>
+        <ol class="causes">
+          {% for cause in advisory.possible_causes %}
+          <li>
+            <strong>{{ cause.name }}</strong>
+            {% if cause.note %}<span class="cause-note">{{ cause.note }}</span>{% endif %}
+          </li>
+          {% endfor %}
+        </ol>
+        {% endif %}
+
+        {% if advisory.next_steps %}
+        <h3>{{ t.next_steps }}</h3>
+        <ul class="steps">
+          {% for step in advisory.next_steps %}<li>{{ step }}</li>{% endfor %}
+        </ul>
+        {% endif %}
+      </div>
+      {% else %}
+      {# Degraded path: markdown converted with escape-first sanitisation
+         (textfmt.to_safe_html). Never render advisory_text raw. #}
+      <div class="advisory">{{ advisory_html|safe }}</div>
+      {% endif %}
+
+      {% if result.advisory_citations %}
+      <details class="citations">
+        <summary>{{ t.sources_used }} ({{ result.advisory_citations|length }})</summary>
+        <ol>
+          {% for citation in result.advisory_citations %}<li>{{ citation }}</li>{% endfor %}
+        </ol>
+      </details>
+      {% endif %}
+    </section>
+    {% endif %}
+
+    <section class="emergency-panel" role="note">
+      <h2>{{ t.urgent_review }}</h2>
+      <p>{{ emergency_instruction }}</p>
+      <ul>
+        {% for flag in red_flags %}<li>{{ flag }}</li>{% endfor %}
+      </ul>
+      {# Devanagari numerals in the Nepali interface, matching the footer. #}
+      <p class="emergency-contact">
+        {% if language == 'ne' %}एम्बुलेन्स: <strong>१०२</strong>{% else %}Ambulance: <strong>102</strong>{% endif %}
+      </p>
+    </section>
+
+  </div>
+
+  <div class="rg-details">
+    <details class="analysis-details">
+      <summary>{{ t.analysis_details }}</summary>
+      <table class="spec-table">
+        <tr><th>{{ t.model_label }}</th><td><code>{{ result.architecture }}</code></td></tr>
+        <tr>
+          <th>{% if language == 'ne' %}वर्गहरू{% else %}Classes{% endif %}</th>
+          <td>
+            {% if language == 'ne' %}{{ result.probabilities|length }} वर्गमा प्रशिक्षित{% else %}trained on {{ result.probabilities|length }} classes{% endif %}
+            ({% for name in result.probabilities.keys() %}{{ t.get(name, name) }}{% if not loop.last %} / {% endif %}{% endfor %})
+          </td>
+        </tr>
+        <tr><th>{% if language == 'ne' %}थ्रेसहोल्ड{% else %}Decision threshold{% endif %}</th><td>{{ '%.2f'|format(result.threshold) }}</td></tr>
+        <tr><th>{{ t.processing_time }}</th><td>{{ '%.0f'|format(result.inference_ms) }} ms</td></tr>
+        <tr><th>{% if language == 'ne' %}स्क्यान नम्बर{% else %}Scan reference{% endif %}</th><td><code>{{ result.scan_ref }}</code></td></tr>
+        <tr><th>{% if language == 'ne' %}मिति{% else %}Analysed{% endif %}</th><td>{{ result.created_at.strftime('%Y-%m-%d %H:%M') }} UTC</td></tr>
+      </table>
+    </details>
+  </div>
+
+</div>
+
+<section class="panel chat-panel" id="questions">
+  <h2>{{ t.chat_title }}</h2>
+  {% if request.args.get('chat_error') %}
+  <div class="alert alert-warn" role="alert">{{ t.chat_failed }}</div>
+  {% endif %}
+  {# role="log" carries polite live semantics; tabindex lets a keyboard user
+     scroll back through earlier answers in this fixed-height region. #}
+  <div class="chat-log" id="chat-log" role="log" tabindex="0"
+       aria-label="{{ t.chat_title }}">
+    {% for turn in chat_history %}
+    <div class="qa">
+      <div class="qa-q">
+        <span class="eyebrow">{{ t.your_question }}</span>
+        <p>{{ turn.question }}</p>
+      </div>
+      <div class="qa-a">
+        <span class="eyebrow">{{ t.clinical_information }}</span>
+        <p>{{ turn.answer }}</p>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <div class="chat-suggestions" id="chat-suggestions">
+    {% if language == 'ne' %}
+      <button type="button" class="chip">यो नतिजाको अर्थ के हो?</button>
+      <button type="button" class="chip">यो संक्रमण हुन सक्छ?</button>
+      <button type="button" class="chip">अब कुन जाँच उपयोगी हुन्छ?</button>
+      <button type="button" class="chip">कहिले तुरुन्त रिफर गर्नुपर्छ?</button>
+    {% else %}
+      <button type="button" class="chip">What does this result mean?</button>
+      <button type="button" class="chip">Could this be an infection?</button>
+      <button type="button" class="chip">What tests may be useful next?</button>
+      <button type="button" class="chip">When should the patient be referred urgently?</button>
+    {% endif %}
+  </div>
+
+  {# A real POST form: with JavaScript off, /chat answers by redirecting back
+     here with the transcript server-rendered, instead of losing the question
+     to a bare GET. #}
+  <form class="chat-form" id="chat-form"
+        method="post" action="{{ url_for('chat') }}"
+        data-analysis-id="{{ result.analysis_id }}"
+        data-endpoint="{{ url_for('chat') }}"
+        data-str-preparing="{{ t.preparing_answer }}"
+        data-str-question="{{ t.your_question }}"
+        data-str-answer="{{ t.clinical_information }}"
+        data-str-sources="{{ t.sources_used }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="analysis_id" value="{{ result.analysis_id }}">
+    <input type="hidden" name="language" value="{{ language }}">
+    <label class="visually-hidden" for="chat-input">{{ t.ask_label }}</label>
+    <input type="text" id="chat-input" name="question" autocomplete="off"
+           placeholder="{{ t.chat_placeholder }}" maxlength="1000">
+    <button type="submit" class="btn btn-primary" id="chat-send">{{ t.send }}</button>
+  </form>
+  <p class="hint" id="chat-status" hidden></p>
+</section>
+
+{% endblock %}
