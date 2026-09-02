@@ -129,6 +129,26 @@ NO_CONTEXT_FALLBACK_NE = (
     "गर्नुहोस्।"
 )
 
+#: Shown above verbatim knowledge-base text when automatic summarisation was
+#: not available. The corpus is English only, so a Nepali reader is told in
+#: Nepali what they are looking at and why it is not in their language. The
+#: source text itself is never machine-translated: unreviewed translation of
+#: clinical guidance is a safety risk of its own.
+DEGRADED_NOTICE_EN = (
+    "An automatic summary was not available, so the reference material below "
+    "is shown exactly as it appears in the knowledge base. It is general "
+    "guidance, not an assessment of this scan."
+)
+
+DEGRADED_NOTICE_NE = (
+    "स्वचालित सारांश उपलब्ध भएन। तलको सन्दर्भ सामग्री ज्ञान-भण्डारमा "
+    "जस्तो छ, त्यस्तै राखिएको छ। यो सामान्य मार्गदर्शन हो, यो स्क्यानको "
+    "मूल्याङ्कन होइन।\n\n"
+    "सन्दर्भ सामग्री अङ्ग्रेजीमा मात्र उपलब्ध छ। नेपालीमा बुझ्न "
+    "स्वास्थ्यकर्मी वा चिकित्सकसँग सल्लाह लिनुहोस्।"
+)
+
+
 # Topics the assistant refuses outright, as regular expressions matched
 # case-insensitively against the user's question.
 #
@@ -334,6 +354,19 @@ def get_no_context_fallback(language: Language = "en") -> str:
     return NO_CONTEXT_FALLBACK_NE if language == "ne" else NO_CONTEXT_FALLBACK_EN
 
 
+def get_degraded_notice(language: Language = "en") -> str:
+    """Return the notice shown above verbatim knowledge-base source text.
+
+    Args:
+        language: Interface language.
+
+    Returns:
+        The notice, including the English-only caveat when the reader's
+        language is Nepali, since the corpus carries no Nepali text.
+    """
+    return DEGRADED_NOTICE_NE if language == "ne" else DEGRADED_NOTICE_EN
+
+
 def append_disclaimer(text: str, language: Language = "en") -> str:
     """Append the disclaimer to generated text if it is not already present.
 
@@ -351,6 +384,8 @@ def append_disclaimer(text: str, language: Language = "en") -> str:
 
 
 __all__ = [
+    "DEGRADED_NOTICE_EN",
+    "DEGRADED_NOTICE_NE",
     "DISCLAIMER_EN",
     "DISCLAIMER_NE",
     "DISCLAIMER_SHORT_EN",
@@ -364,6 +399,7 @@ __all__ = [
     "Language",
     "SafetyCheck",
     "append_disclaimer",
+    "get_degraded_notice",
     "get_disclaimer",
     "get_no_context_fallback",
     "get_red_flags",

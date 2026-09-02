@@ -26,6 +26,7 @@ from neuroscan.rag.prompts import (
 from neuroscan.safety import (
     Language,
     append_disclaimer,
+    get_degraded_notice,
     get_disclaimer,
     get_no_context_fallback,
     get_red_flags,
@@ -405,8 +406,8 @@ class AdvisoryEngine:
 
         # No generative backend: present the retrieved source text directly.
         # Done here rather than inside the provider because this path knows the
-        # requested language and holds the chunks, so it produces a properly
-        # localised, attributed result instead of an English-only echo.
+        # requested language and holds the chunks, so the notice around the
+        # source text is localised and the result stays attributed.
         if not self.llm.is_generative:
             return self._degraded_from_chunks(
                 chunks, prediction, confidence, language, started, instruction, red_flags
@@ -500,13 +501,15 @@ class AdvisoryEngine:
 
         Honest and still useful: the health worker sees the same reference
         material the model would have summarised, attributed to its source.
+
+        The notice is localised but the corpus is English only, so a Nepali
+        reader is told in Nepali what this material is and that it is not
+        available in their language. Machine-translating it here was
+        rejected: an unreviewed translation of clinical guidance is a
+        safety risk, and a wrong Nepali sentence is worse than a correct
+        English one the reader can take to a health worker.
         """
-        header = (
-            "यो जानकारी ज्ञान-भण्डारबाट सिधै लिइएको हो (सारांश उपलब्ध छैन):"
-            if language == "ne"
-            else "The following information is taken directly from the knowledge base "
-                 "(automatic summarisation was not available):"
-        )
+        notice = get_degraded_notice(language)
         # Corpus text carries markdown and [[wiki-links]] that are meaningful
         # inside the knowledge base and meaningless to a clinician. Without
         # this the report opens on '**Neurocysticercosis**' and
@@ -516,7 +519,7 @@ class AdvisoryEngine:
             for c in chunks[:3]
         )
         return AdvisoryResult(
-            text=append_disclaimer(f"{header}\n\n{body}", language),
+            text=append_disclaimer(f"{notice}\n\n{body}", language),
             language=language,
             prediction=prediction,
             confidence=confidence,
