@@ -1,0 +1,78 @@
+name: Clinical safety concern
+description: Something the system said or did that could mislead a user clinically
+title: "[safety]: "
+labels: ["safety", "needs triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        **If the defect would let a user act on unsafe medical content, please
+        report it privately instead**, using Report a vulnerability under the
+        Security tab. See [SECURITY.md](../blob/main/SECURITY.md).
+
+        Use this public template for concerns that are safe to discuss openly,
+        such as advice that is unhelpful, unclear, or wrong for the setting.
+
+        You do not need to know the cause. A description of what you saw is
+        enough.
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What did the system say or do?
+      description: Paste the advisory text or describe the output. Redact anything identifying.
+      placeholder: The result was normal, but the advisory went on to list...
+    validations:
+      required: true
+
+  - type: dropdown
+    id: category
+    attributes:
+      label: Which of these fits best?
+      options:
+        - Advice that could delay care
+        - Content that should have been blocked (dosage, prognosis, definitive diagnosis)
+        - A normal result that listed disease possibilities
+        - Missing disclaimer or missing red flag guidance
+        - Wrong for the setting (pathway, cost, or facility that does not apply)
+        - Unclear or misleading wording
+        - Something else
+    validations:
+      required: true
+
+  - type: dropdown
+    id: language
+    attributes:
+      label: Interface language
+      options:
+        - English
+        - Nepali
+        - Both
+    validations:
+      required: true
+
+  - type: input
+    id: classification
+    attributes:
+      label: What classification and confidence were shown?
+      placeholder: "abnormal, 88%"
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What would have been safer or more useful?
+      description: Optional. Your clinical judgement is valuable here even if you cannot suggest a fix.
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: How can this be reproduced?
+      description: Steps, and the question asked if the chat panel was involved. Do not attach real patient images.
+
+  - type: checkboxes
+    id: confirm
+    attributes:
+      label: Please confirm
+      options:
+        - label: This report contains no patient-identifying information and no real patient scan.
+          required: true

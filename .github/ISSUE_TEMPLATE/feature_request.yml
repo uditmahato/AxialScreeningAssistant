@@ -1,0 +1,59 @@
+name: Feature or improvement
+description: Suggest something the project should do differently
+title: "[feature]: "
+labels: ["enhancement", "needs triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This project moves at roughly one working session a week, and
+        prioritises evidence over surface area. A proposal that makes an
+        existing claim more defensible will usually be taken before one that
+        adds scope.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem would this solve?
+      description: Describe the situation, not the solution, so alternatives stay open.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: What are you proposing?
+    validations:
+      required: true
+
+  - type: dropdown
+    id: kind
+    attributes:
+      label: What kind of change is it?
+      options:
+        - Improves an existing capability
+        - Adds a new capability
+        - Improves evidence, evaluation, or reproducibility
+        - Nepali language or translation quality
+        - Documentation
+        - Developer experience
+    validations:
+      required: true
+
+  - type: textarea
+    id: safety
+    attributes:
+      label: Does this touch any safety rule?
+      description: >
+        The rules are listed in CONTRIBUTING.md: disclaimer routing, answering
+        only from retrieved context, screening before and after, unconditional
+        red flags, no dosages or prognosis, and a normal result never listing
+        diseases. Say if the proposal affects any of them and how.
+      placeholder: No, this only affects the training scripts.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: What alternatives did you consider?

@@ -330,8 +330,24 @@ Br35H dataset: Ahmed Hamada.
 No clinical data has been used. No institution has partnered with, endorsed or
 supplied data to this project, and no result here depends on non-public data.
 
+## Contributing
+
+Contributions are welcome, and corrections to the Nepali from native speakers
+are worth more to this project than most code changes. Please read
+[CONTRIBUTING.md](CONTRIBUTING.md) first: it sets out the safety rules that a
+change must not break, and they are not style preferences.
+
+Participation is covered by the [code of conduct](CODE_OF_CONDUCT.md).
+
+## Reporting a safety defect
+
+If the system produces clinical content that could mislead a user, or a safety
+screen fails open, report it privately rather than in a public issue.
+[SECURITY.md](SECURITY.md) explains how, what is in scope, and which
+limitations are already known and documented.
+
 ## Licence
 
-MIT. The knowledge base is compiled from published clinical guidance with
-sources recorded per document; it is not a substitute for current local
-protocols.
+[MIT](LICENSE). The knowledge base is compiled from published clinical
+guidance with sources recorded per document; it is not a substitute for
+current local protocols.
