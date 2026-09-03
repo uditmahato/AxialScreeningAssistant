@@ -1,0 +1,13 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Report a security or clinical safety defect privately
+    url: https://github.com/uditmahato/AxialScreeningAssistant/security/advisories/new
+    about: >
+      Use this for anything that would let a user act on unsafe medical
+      content, or for a software vulnerability. It stays private.
+  - name: Read the safety policy first
+    url: https://github.com/uditmahato/AxialScreeningAssistant/blob/main/SECURITY.md
+    about: What is in scope, what is already known, and what to expect after reporting.
+  - name: Contributing guide
+    url: https://github.com/uditmahato/AxialScreeningAssistant/blob/main/CONTRIBUTING.md
+    about: Setup, the safety rules that are not negotiable, and what a pull request needs.

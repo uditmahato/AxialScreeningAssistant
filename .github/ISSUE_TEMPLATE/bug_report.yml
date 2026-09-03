@@ -1,0 +1,72 @@
+name: Bug report
+description: Something in the software does not work as documented
+title: "[bug]: "
+labels: ["bug", "needs triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        For anything where the system's clinical output could mislead a user,
+        please use the Clinical safety concern template instead.
+
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened?
+      description: Include the full error and traceback if there was one.
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What did you expect instead?
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Run `python scripts/...`
+        2. Upload an image of ...
+        3. See the error
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Which part of the system?
+      options:
+        - Web portal or PDF report
+        - Classifier or Grad-CAM
+        - Retrieval or advisory generation
+        - Safety screening
+        - Training, evaluation, or the audit scripts
+        - Setup, install, or data download
+        - Not sure
+    validations:
+      required: true
+
+  - type: input
+    id: os
+    attributes:
+      label: Operating system and Python version
+      placeholder: "Windows 11, Python 3.11"
+    validations:
+      required: true
+
+  - type: input
+    id: commit
+    attributes:
+      label: Commit or release
+      placeholder: "v1.0, or the short commit hash"
+
+  - type: textarea
+    id: checks
+    attributes:
+      label: Do the tests pass on your machine?
+      description: Output of `pytest -q` and `ruff check src scripts tests`, if you ran them.
+      render: shell
